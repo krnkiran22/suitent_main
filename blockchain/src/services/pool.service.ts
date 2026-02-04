@@ -27,20 +27,21 @@ export class PoolService {
       // Clear old cache
       this.poolCache.clear();
       
-      // Cache pools by name (e.g., "SUI_USDC")
-      if (data.pools && Array.isArray(data.pools)) {
-        for (const pool of data.pools) {
-          this.poolCache.set(pool.pool_name, {
-            poolId: pool.pool_id,
-            poolName: pool.pool_name,
-            baseCoin: pool.base_asset,
-            quoteCoin: pool.quote_asset,
-            baseDecimals: pool.base_decimals || 9,
-            quoteDecimals: pool.quote_decimals || 6,
-            lotSize: pool.lot_size || "1000000",
-            tickSize: pool.tick_size || "1000",
-          });
-        }
+      // Data is an array of pools directly
+      const pools = Array.isArray(data) ? data : (data.pools || []);
+      
+      for (const pool of pools) {
+        // Use base_asset_symbol and quote_asset_symbol from indexer
+        this.poolCache.set(pool.pool_name, {
+          poolId: pool.pool_id,
+          poolName: pool.pool_name,
+          baseCoin: pool.base_asset_symbol,
+          quoteCoin: pool.quote_asset_symbol,
+          baseDecimals: pool.base_asset_decimals || 9,
+          quoteDecimals: pool.quote_asset_decimals || 6,
+          lotSize: pool.lot_size?.toString() || "1000000",
+          tickSize: pool.tick_size?.toString() || "1000",
+        });
       }
       
       this.lastFetch = now;

@@ -105,20 +105,25 @@ export function useSwap() {
       setTxDigest(null);
 
       try {
-        // Step 1: Build transaction from backend
-        console.log("[useSwap] Step 1: Building transaction...");
-        const minAmountOut = quote?.tokenOut.minAmount || "0";
+        // Step 1: Get quote to calculate minAmountOut
+        console.log("[useSwap] Step 1: Getting quote for minAmountOut...");
+        const quoteData = await getSwapQuote(tokenIn, tokenOut, amountIn);
+        const minAmountOut = (parseFloat(quoteData.estimatedAmountOut) * (1 - slippage)).toFixed(6);
+        console.log("[useSwap] Min amount out with slippage:", minAmountOut);
+        
+        // Step 2: Build transaction from backend
+        console.log("[useSwap] Step 2: Building transaction...");
         const { transaction, quote: txQuote } = await buildSwapTransaction(
           walletAddress,
           tokenIn,
           tokenOut,
           amountIn,
-          slippage
+          minAmountOut
         );
         console.log("[useSwap] Transaction built:", transaction);
 
-        // Step 2: Sign with Turnkey
-        console.log("[useSwap] Step 2: Signing with Turnkey...");
+        // Step 3: Sign with Turnkey
+        console.log("[useSwap] Step 3: Signing with Turnkey...");
         
         // Decode base64 to Uint8Array for signing
         const txBytes = Uint8Array.from(atob(transaction.txBytes), (c) => c.charCodeAt(0));
@@ -130,8 +135,8 @@ export function useSwap() {
         });
         console.log("[useSwap] Transaction signed, signature:", signature?.substring(0, 50) + "...");
 
-        // Step 3: Execute on Sui network
-        console.log("[useSwap] Step 3: Executing on Sui network...");
+        // Step 4: Execute on Sui network
+        console.log("[useSwap] Step 4: Executing on Sui network...");
         const result = await suiClient.executeTransactionBlock({
           transactionBlock: transactionBlockBytes || transaction.txBytes,
           signature: signature,

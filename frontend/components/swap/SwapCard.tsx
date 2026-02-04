@@ -82,8 +82,14 @@ export function SwapCard() {
   const getButtonState = () => {
     if (!isConnected) return { text: "Connect Wallet", disabled: false, action: handleLogin };
     if (!amountIn || parseFloat(amountIn) <= 0) return { text: "Enter Amount", disabled: true };
-    if (parseFloat(amountIn) > parseFloat(getBalance(tokenIn.symbol))) {
-      return { text: "Insufficient Balance", disabled: true };
+    
+    const balance = parseFloat(getBalance(tokenIn.symbol));
+    const amount = parseFloat(amountIn);
+    
+    console.log(`[SwapCard] Balance check: ${balance} ${tokenIn.symbol}, trying to swap: ${amount}`);
+    
+    if (amount > balance) {
+      return { text: `Insufficient ${tokenIn.symbol} Balance`, disabled: true };
     }
     if (wsLoading) return { text: "Getting Quote...", disabled: true };
     if (loading) return { text: "Swapping...", disabled: true };
@@ -154,29 +160,21 @@ export function SwapCard() {
             value={wsQuote?.estimatedAmountOut || ""}
             placeholder="0.0"
             disabled
-            className="amount-input"
+            className="amount-input text-gray-300"
           />
         </div>
       </div>
 
       {/* Quote Details */}
-      {wsQuote && (
+      {wsQuote && amountIn && parseFloat(amountIn) > 0 && (
         <div className="swap-details">
-          <div className="swap-details-row">
-            <span>Rate</span>
-            <span>1 {tokenIn.symbol} = {wsQuote.pricePerToken} {tokenOut.symbol}</span>
-          </div>
           <div className="swap-details-row">
             <span>Price Impact</span>
             <span className={parseFloat(wsQuote.priceImpact) > 1 ? "text-red-400" : ""}>{wsQuote.priceImpact}%</span>
           </div>
           <div className="swap-details-row">
-            <span>Min. Received</span>
+            <span>Min. Received (1% slippage)</span>
             <span>{(parseFloat(wsQuote.estimatedAmountOut) * 0.99).toFixed(6)} {tokenOut.symbol}</span>
-          </div>
-          <div className="swap-details-row">
-            <span>Network Fee</span>
-            <span>~0.005 SUI</span>
           </div>
         </div>
       )}
@@ -216,16 +214,6 @@ export function SwapCard() {
           >
             Dismiss
           </button>
-        </div>
-      )}
-
-      {/* Debug Info (remove in production) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-4 p-2 bg-gray-800/50 rounded text-xs text-gray-500">
-          <div>Wallet: {walletAddress ? `${walletAddress.substring(0, 10)}...` : "Not connected"}</div>
-          <div>WebSocket: {wsConnected ? "Connected ✅" : "Disconnected ❌"}</div>
-          <div>Quote Loading: {wsLoading ? "Yes" : "No"}</div>
-          <div>Swap Loading: {loading ? "Yes" : "No"}</div>
         </div>
       )}
     </div>

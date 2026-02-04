@@ -1,8 +1,10 @@
 import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
+import { deepbook } from "@mysten/deepbook-v3";
 import { config } from "../config/index.js";
 
 export class SuiService {
   private client: SuiJsonRpcClient;
+  private deepbookClient: ReturnType<SuiJsonRpcClient["$extend"]> | null = null;
 
   constructor() {
     this.client = new SuiJsonRpcClient({
@@ -13,6 +15,18 @@ export class SuiService {
 
   getClient(): SuiJsonRpcClient {
     return this.client;
+  }
+
+  getDeepBookClient(address?: string) {
+    if (!this.deepbookClient) {
+      console.log("[SuiService] Creating DeepBook extended client...");
+      this.deepbookClient = this.client.$extend(
+        deepbook({
+          address: address || "0x0000000000000000000000000000000000000000000000000000000000000000",
+        })
+      );
+    }
+    return this.deepbookClient;
   }
 
   async getBalance(address: string, coinType: string): Promise<string> {

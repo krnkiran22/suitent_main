@@ -33,7 +33,14 @@ export function useBalances(address: string | undefined) {
 
     try {
       const data = await getBalances(address);
+      console.log("[useBalances] Raw response:", data);
       console.log("[useBalances] Balances received:", data.balances);
+      
+      // Log each balance for debugging
+      data.balances.forEach((b: any) => {
+        console.log(`[useBalances] ${b.symbol}: ${b.balance} (raw: ${b.balanceRaw})`);
+      });
+      
       setBalances(data.balances);
     } catch (err: any) {
       console.error("[useBalances] Error:", err);
@@ -65,6 +72,10 @@ export function useBalances(address: string | undefined) {
     loading,
     error,
     refetch: fetchBalances,
-    getBalance: (symbol: string) => balances.find((b) => b.symbol === symbol)?.balance || "0",
+    getBalance: (symbol: string) => {
+      const balance = balances.find((b) => b.symbol === symbol)?.balance || "0";
+      console.log(`[useBalances] getBalance(${symbol}) = ${balance}`);
+      return balance;
+    },
   };
 }

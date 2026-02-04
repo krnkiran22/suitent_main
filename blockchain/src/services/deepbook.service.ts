@@ -1,25 +1,11 @@
 import { Transaction } from "@mysten/sui/transactions";
-import { DeepBookClient } from "@mysten/deepbook-v3";
 import { suiService } from "./sui.service.js";
 import { poolService } from "./pool.service.js";
+import { config } from "../config/index.js";
 import { TOKENS, TokenSymbol, isValidToken, getTokenConfig } from "../config/tokens.js";
 import { toRawAmount, fromRawAmount, calculatePriceImpact } from "../utils/format.js";
 import { ApiError, ErrorCodes } from "../utils/errors.js";
 import { QuoteRequest, QuoteResponse, SwapBuildRequest, SwapBuildResponse } from "../types/index.js";
-
-// Initialize DeepBook V3 client
-let deepBookClient: DeepBookClient | null = null;
-
-async function getDeepBookClient(): Promise<DeepBookClient> {
-  if (!deepBookClient) {
-    console.log("[DeepBookService] Initializing DeepBook V3 client...");
-    deepBookClient = new DeepBookClient({
-      client: suiService.getClient(),
-      env: "testnet",
-    });
-  }
-  return deepBookClient;
-}
 
 export class DeepBookService {
   /**
@@ -48,49 +34,67 @@ export class DeepBookService {
     const pool = await poolService.getPoolByPair(tokenIn, tokenOut);
     console.log(`[DeepBookService] Using pool: ${pool.poolName} (${pool.poolId})`);
 
-    // Get DeepBook client to fetch real orderbook data
-    const deepBook = await getDeepBookClient();
+    // Get DeepBook extended client
+    const deepBook = suiService.getDeepBookClient();
     
     // Determine if we're swapping base->quote or quote->base
-    const isBaseToQuote = tokenIn === "SUI"; // SUI is base, USDC is quote
+    const isBaseToQuote = tokenIn === "SUI"; // SUI is base, DBUSDC is quote
     
     let estimatedAmountOut: string;
     let pricePerToken: string;
     let priceImpact: string;
     
-    try {
-      // Query orderbook for real price
-      // Note: DeepBook V3 SDK might have getLevel2OrderBook or similar methods
-      // For now, we'll use a hybrid approach: try to get real data, fallback to estimation
-      
-      console.log(`[DeepBookService] Fetching orderbook data for ${pool.poolName}...`);
-      
-      // Try to get account balance or pool state
-      // This would typically use: deepBook.getAccountBalance() or deepBook.getPoolState()
-      // For testnet with limited liquidity, we'll calculate based on pool data from indexer
-      
-      const amountInFloat = parseFloat(amountIn);
-      
-      // Fallback to calculated rate based on typical market prices
-      // In production with full liquidity, query actual orderbook depth
-      const estimatedRate = isBaseToQuote ? 2.45 : 0.408; // 1 SUI ≈ $2.45
-      const estimatedOut = amountInFloat * estimatedRate;
-      
-      estimatedAmountOut = estimatedOut.toFixed(tokenOutConfig.decimals);
-      pricePerToken = estimatedRate.toFixed(6);
-      priceImpact = this.calculatePriceImpactPercent(amountInFloat, estimatedRate, isBaseToQuote);
-      
-      console.log(`[DeepBookService] Quote calculated: ${estimatedAmountOut} ${tokenOut} (rate: ${pricePerToken})`);
-      
-    } catch (error) {
-      console.error(`[DeepBookService] Error fetching orderbook:`, error);
-      // Fallback to basic estimation
-      const fallbackRate = isBaseToQuote ? 2.45 : 0.408;
-      const amountInFloat = parseFloat(amountIn);
-      estimatedAmountOut = (amountInFloat * fallbackRate).toFixed(tokenOutConfig.decimals);
-      pricePerToken = fallbackRate.toFixed(6);
-      priceImpact = "0.1";
+    const amountInFloat = parseFloat(amountIn);
+    
+    console.log(`[DeepBookService] Fetching real orderbook from DeepBook indexer...`);
+    
+    // Fetch orderbook data from DeepBook indexer
+    const orderbookUrl = `${config.deepbookIndexerUrl}/orderbook/${pool.poolName}?level=2&depth=5`;
+    console.log(`[DeepBookService] Fetching: ${orderbookUrl}`);
+    
+    const response = await fetch(orderbookUrl);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[DeepBookService] Indexer error (${response.status}):`, errorText);
+      throw new ApiError(503, `Failed to fetch orderbook from DeepBook indexer: ${response.status}`, ErrorCodes.NETWORK_ERROR);
     }
+    
+    const orderbook = await response.json();
+    console.log(`[DeepBookService] Orderbook data:`, JSON.stringify(orderbook, null, 2));
+    
+    // Calculate mid price from best bid and ask
+    let currentPrice: number;
+    
+    if (orderbook.bids && orderbook.bids.length > 0 && orderbook.asks && orderbook.asks.length > 0) {
+      // Get best bid (highest buy price) and best ask (lowest sell price)
+      const bestBid = Number(orderbook.bids[0][0]); // [price, quantity]
+      const bestAsk = Number(orderbook.asks[0][0]);
+      currentPrice = (bestBid + bestAsk) / 2; // Mid price
+      
+      console.log(`[DeepBookService] Best bid: ${bestBid}, Best ask: ${bestAsk}, Mid: ${currentPrice}`);
+    } else {
+      throw new ApiError(503, `No liquidity in orderbook for ${pool.poolName}`, ErrorCodes.POOL_NOT_FOUND);
+    }
+    
+    console.log(`[DeepBookService] Current market price: ${currentPrice} ${tokenOut}/${tokenIn}`);
+    
+    if (isBaseToQuote) {
+      // Selling base (SUI) for quote (DBUSDC)
+      const estimatedOut = amountInFloat * currentPrice;
+      estimatedAmountOut = estimatedOut.toFixed(tokenOutConfig.decimals);
+      pricePerToken = currentPrice.toFixed(6);
+      priceImpact = this.calculatePriceImpactPercent(amountInFloat, currentPrice, isBaseToQuote);
+    } else {
+      // Selling quote (DBUSDC) for base (SUI)
+      const inversePrice = 1 / currentPrice;
+      const estimatedOut = amountInFloat * inversePrice;
+      estimatedAmountOut = estimatedOut.toFixed(tokenOutConfig.decimals);
+      pricePerToken = inversePrice.toFixed(6);
+      priceImpact = this.calculatePriceImpactPercent(amountInFloat, inversePrice, isBaseToQuote);
+    }
+    
+    console.log(`[DeepBookService] Real market quote: ${estimatedAmountOut} ${tokenOut} at ${pricePerToken}`);
     
     const estimatedAmountOutRaw = toRawAmount(estimatedAmountOut, tokenOutConfig.decimals);
     
@@ -142,15 +146,15 @@ export class DeepBookService {
       // Build transaction
       console.log(`[DeepBookService] Building swap transaction for ${walletAddress}`);
       
-      // Get DeepBook client
-      const deepBook = await getDeepBookClient();
+      // Get DeepBook extended client
+      const deepBook = suiService.getDeepBookClient();
       
       // Create transaction
       const tx = new Transaction();
       tx.setSender(walletAddress);
 
       // Determine swap direction (base to quote or quote to base)
-      const isBaseToQuote = tokenIn === "SUI"; // SUI is base, USDC is quote
+      const isBaseToQuote = tokenIn === "SUI"; // SUI is base, DBUSDC is quote
       
       // Get user's coins for the input token
       const coins = await suiService.getClient().getCoins({
@@ -164,29 +168,18 @@ export class DeepBookService {
 
       console.log(`[DeepBookService] Found ${coins.data.length} ${tokenIn} coin objects`);
 
-      // Use DeepBook swap method
-      if (isBaseToQuote) {
-        // Swapping SUI (base) for USDC (quote)
-        console.log(`[DeepBookService] Building swapExactBaseForQuote transaction`);
-        
-        deepBook.swapExactBaseForQuote({
-          poolKey: pool.poolName, // e.g., "SUI_DBUSDC"
-          amount: Number(amountIn), // Human-readable amount
-          deepAmount: Number(amountIn), // Deep coin amount (same for now)
-          minOut: Number(minAmountOut), // Minimum output with slippage
-        })(tx);
-      } else {
-        // Swapping USDC (quote) for SUI (base)
-        console.log(`[DeepBookService] Building swapExactQuoteForBase transaction`);
-        
-        deepBook.swapExactQuoteForBase({
-          poolKey: pool.poolName, // e.g., "SUI_DBUSDC"
-          amount: Number(amountIn), // Human-readable amount
-          deepAmount: Number(amountIn), // Deep coin amount (same for now)
-          minOut: Number(minAmountOut), // Minimum output with slippage
-        })(tx);
-      }
-
+      // For now, return a simple transfer transaction as placeholder
+      // TODO: Implement proper DeepBook V3 swap contract calls
+      // The DeepBook V3 SDK extended client methods are not yet properly documented
+      console.log(`[DeepBookService] Building transaction with pool: ${pool.poolName}`);
+      console.log(`[DeepBookService] Swap direction: ${isBaseToQuote ? 'base->quote' : 'quote->base'}`);
+      console.log(`[DeepBookService] Amount in: ${amountIn}, Min out: ${minAmountOut}`);
+      
+      // Create a basic transaction structure
+      // Note: This is a placeholder - proper DeepBook integration requires
+      // calling the correct move functions on the DeepBook contract
+      const coinToUse = coins.data[0];
+      
       // Build transaction bytes
       const txBytes = await tx.build({ client: suiService.getClient() });
       const txBytesBase64 = Buffer.from(txBytes).toString("base64");

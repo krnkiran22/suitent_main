@@ -46,7 +46,7 @@ export async function getTokens() {
 }
 
 export async function getBalances(address: string) {
-  return apiCall<{ address: string; balances: any[] }>(`/api/balances/${address}`);
+  return apiCall<{ address: string; balances: any[] }>(`/api/swap/balances/${address}`);
 }
 
 export async function getSwapQuote(tokenIn: string, tokenOut: string, amountIn: string) {
@@ -61,11 +61,11 @@ export async function buildSwapTransaction(
   tokenIn: string,
   tokenOut: string,
   amountIn: string,
-  slippage: number = 0.01
+  minAmountOut: string
 ) {
   return apiCall<{ transaction: { txBytes: string }; quote: any }>("/api/swap/build", {
     method: "POST",
-    body: JSON.stringify({ walletAddress, tokenIn, tokenOut, amountIn, slippage }),
+    body: JSON.stringify({ walletAddress, tokenIn, tokenOut, amountIn, minAmountOut }),
   });
 }
 
