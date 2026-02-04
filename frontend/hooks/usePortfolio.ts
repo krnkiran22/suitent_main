@@ -28,7 +28,13 @@ export function usePortfolio() {
       
       try {
         const data = await getAllBalances(address);
-        setBalances(data as TokenBalance[]);
+        // Map CoinBalance to TokenBalance
+        const mappedBalances: TokenBalance[] = data.map((coin) => ({
+          coinType: coin.coinType,
+          balance: coin.totalBalance,
+          totalBalance: coin.totalBalance,
+        }));
+        setBalances(mappedBalances);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch balances");
       } finally {

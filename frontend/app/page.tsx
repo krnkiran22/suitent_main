@@ -43,12 +43,9 @@ export default function Home() {
             SuiTent
           </h1>
 
-          {/* Headline - Fixed Visibility */}
-          <h2 className="text-5xl md:text-6xl font-bold text-white mb-8 leading-tight drop-shadow-xl">
-            The First AI-Powered <br />
-            <span className="text-[#4DA2FF] drop-shadow-[0_0_30px_rgba(77,162,255,0.8)]">
-              Intent Engine
-            </span> on Sui.
+          {/* Headline - Direct and Powerful */}
+          <h2 className="text-5xl md:text-7xl font-bold text-[#4DA2FF] mb-8 leading-tight drop-shadow-[0_0_35px_rgba(77,162,255,0.6)]">
+            Intent Engine <span className="text-white">on Sui.</span>
           </h2>
 
           {/* Description */}

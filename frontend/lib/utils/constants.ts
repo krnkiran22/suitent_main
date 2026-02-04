@@ -4,7 +4,7 @@ export const MIST_PER_SUI = BigInt(10 ** SUI_DECIMALS);
 export const APP_NAME = "SuiTent";
 export const APP_DESCRIPTION = "Intent-Based Trading on Sui";
 
-export const DEFAULT_GAS_BUDGET = 5_000_000n;
+export const DEFAULT_GAS_BUDGET = BigInt(5_000_000);
 
 export const ROUTES = {
   HOME: "/",

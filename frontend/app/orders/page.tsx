@@ -20,7 +20,7 @@ export default function OrdersPage() {
       toToken: "USDC",
       amount: "100",
       triggerPrice: "$2.10",
-      status: "active" as const,
+      status: "active" as "active" | "cancelled",
       createdAt: Date.now() - 3600000,
     },
     {
@@ -31,7 +31,7 @@ export default function OrdersPage() {
       toToken: "SUI",
       amount: "500",
       triggerPrice: "$2.50",
-      status: "active" as const,
+      status: "active" as "active" | "cancelled",
       createdAt: Date.now() - 7200000,
     },
   ]);

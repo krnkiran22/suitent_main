@@ -1,4 +1,4 @@
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from '@mysten/sui/jsonRpc';
 import { Transaction } from '@mysten/sui/transactions';
 import { Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
 import { messageWithIntent } from '@mysten/sui/cryptography';
@@ -38,13 +38,16 @@ export async function signAndExecuteSuiTransaction({
   transaction: Transaction;
   network?: 'mainnet' | 'testnet' | 'devnet';
 }) {
-  const provider = new SuiClient({ url: getFullnodeUrl(network) });
+  const provider = new SuiJsonRpcClient({ 
+    network, 
+    url: getJsonRpcFullnodeUrl(network) 
+  });
   const publicKey = new Ed25519PublicKey(Buffer.from(suiPublicKey, 'hex'));
 
   // Build the transaction
   transaction.setSender(suiAddress);
   transaction.setGasPrice(await provider.getReferenceGasPrice());
-  transaction.setGasBudget(5_000_000n);
+  transaction.setGasBudget(BigInt(5_000_000));
 
   const txBytes = await transaction.build({ client: provider });
 
