@@ -1,75 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { ConnectButton } from "../wallet/ConnectButton";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { ConnectButton } from "../wallet/ConnectButton"; 
 
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  const navLinks = [
-    { label: "Platform", href: "/chat" },
-    { label: "Portfolio", href: "/portfolio" },
-    { label: "Orders", href: "/orders" },
-    { label: "History", href: "/history" },
-  ];
+  const navLinks = ["Research", "Learn", "Build", "Ecosystem"];
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-sui-dark/80 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        {/* Logo Section */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <div className="w-4 h-5 bg-black rounded-b-full"></div>
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">SuiTent</span>
+    <header className="fixed top-8 left-0 right-0 z-50 flex justify-center w-full px-4">
+      {/* The Glass Pill Container */}
+      <div className="flex items-center gap-2 p-1.5 rounded-full bg-sui-dark/30 backdrop-blur-xl border border-white/10 shadow-2xl">
+        
+        {/* Logo Area */}
+        <Link href="/" className="flex items-center justify-center w-10 h-10 bg-white rounded-full ml-1">
+           {/* Simple abstract logo */}
+           <div className="w-4 h-4 bg-sui-blue rounded-full"></div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-8">
+        {/* Links */}
+        <nav className="hidden md:flex items-center px-4 gap-6">
           {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="group flex items-center gap-1 text-sm font-medium text-sui-mist hover:text-white transition-colors"
+            <Link 
+              key={link} 
+              href={`/${link.toLowerCase()}`}
+              className="text-sm font-medium text-white/80 hover:text-white transition-colors"
             >
-              {link.label}
+              {link}
             </Link>
           ))}
         </nav>
 
-        {/* Right Section - Wallet Connection */}
-        <div className="flex items-center gap-4">
-          <ConnectButton />
-          
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-white"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+        {/* Actions */}
+        <div className="flex items-center gap-2 pl-2">
+            <Link href="/docs" className="px-4 py-2 text-sm font-semibold text-sui-dark bg-white rounded-full hover:bg-gray-100 transition-colors">
+                Docs
+            </Link>
+            <div className="scale-90">
+                <ConnectButton />
+            </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-sui-ocean border-t border-white/5">
-          <nav className="flex flex-col p-6 gap-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sui-mist hover:text-white transition-colors py-2"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

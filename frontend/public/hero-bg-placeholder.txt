@@ -1,0 +1,9 @@
+<!-- Placeholder for hero background image -->
+<!-- 
+  Replace this with your AI-generated 3D liquid digital landscape image.
+  Recommended specs:
+  - Resolution: 1920x1080 or higher
+  - Format: JPG or WebP
+  - File name: hero-bg.jpg
+  - Theme: Liquid, digital, abstract with blues and dark tones
+-->

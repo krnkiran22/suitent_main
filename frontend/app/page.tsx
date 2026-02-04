@@ -1,113 +1,69 @@
-"use client";
-
-import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { Button } from "@/components/common/Button";
-import { ArrowRight, Zap, Shield, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRightIcon, DocsIcon } from "@/components/icons/HeroIcons";
 
 export default function Home() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-sui-dark">
-        {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-          {/* Hero Glow Background */}
-          <div className="absolute inset-0 bg-hero-glow opacity-40" />
+      <main className="relative min-h-screen w-full flex flex-col overflow-hidden bg-sui-dark">
+        
+        {/* 1. Background Layer (The Generated Image) */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/suitentbg.png"
+            alt="SuiTent Liquid Digital Landscape"
+            fill
+            priority
+            className="object-cover"
+            quality={100}
+          />
+          {/* Gradient Overlay: Crucial for text visibility */}
+          {/* Fades from transparent top to dark blue bottom */}
+          <div className="absolute inset-0 bg-gradient-to-t from-sui-dark via-sui-dark/40 to-transparent" />
+        </div>
+
+        {/* 2. Hero Content Layer (Bottom Left Alignment) */}
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
           
-          {/* Animated Grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
-
-          <div className="relative z-10 max-w-7xl mx-auto px-6 py-32 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sui-blue/10 border border-sui-blue/30 mb-8">
-                <Sparkles size={16} className="text-sui-blue" />
-                <span className="text-sm font-medium text-sui-blue">
-                  Built on Sui Network
-                </span>
-              </div>
-
-              {/* Main Heading */}
-              <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-6 leading-none">
-                Intent-Based
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sui-blue to-blue-400">
-                  Trading
-                </span>
+          {/* Branding Title */}
+          <div className="flex items-baseline gap-4 mb-2">
+              <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-white drop-shadow-lg">
+              SuiTent
               </h1>
-
-              {/* Subtitle */}
-              <p className="text-xl md:text-2xl text-sui-mist max-w-2xl mx-auto mb-12">
-                Trade at the <span className="text-white font-semibold">Speed of Thought</span>.
-                <br />
-                Just tell us what you want to do.
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link href="/chat">
-                  <Button size="lg" className="group">
-                    Start Trading
-                    <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Link href="/portfolio">
-                  <Button size="lg" variant="secondary">
-                    View Portfolio
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Features Grid */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="grid md:grid-cols-3 gap-6 mt-32 max-w-5xl mx-auto"
-            >
-              {[
-                {
-                  icon: Zap,
-                  title: "Lightning Fast",
-                  description: "Execute trades instantly with Sui's parallel processing"
-                },
-                {
-                  icon: Shield,
-                  title: "Self-Custody",
-                  description: "Your keys, your coins. Powered by Turnkey MPC"
-                },
-                {
-                  icon: Sparkles,
-                  title: "AI-Powered",
-                  description: "Natural language trading with Claude AI"
-                },
-              ].map((feature, index) => (
-                <div
-                  key={index}
-                  className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-sui-blue/50 transition-all"
-                >
-                  <feature.icon className="text-sui-blue mb-4" size={32} />
-                  <h3 className="text-lg font-bold text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sui-mist text-sm">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
-            </motion.div>
+              <span className="px-4 py-1 rounded-full border border-white/30 text-white/90 text-xs uppercase tracking-widest backdrop-blur-md">
+              Intent Layer
+              </span>
           </div>
-        </section>
+
+          {/* Main Value Proposition */}
+          <h2 className="text-4xl md:text-5xl font-light text-white/90 mb-8 max-w-2xl leading-tight">
+            The First AI-Powered <br />
+            <span className="text-sui-blue font-semibold">Intent Execution Engine</span> on Sui.
+          </h2>
+
+          {/* Informative Description (Addresses "people need to know what this is") */}
+          <p className="text-lg md:text-xl text-sui-steel mb-10 max-w-xl leading-relaxed drop-shadow-md">
+            Don&apos;t just swap. <strong>Speak.</strong> SuiTent translates your natural language into complex on-chain strategies, limit orders, and yield farming actions instantly.
+          </p>
+
+          {/* Buttons */}
+          <div className="flex flex-wrap items-center gap-4">
+              {/* Primary Action */}
+              <button className="group flex items-center gap-3 px-8 py-4 bg-white text-sui-dark rounded-full text-lg font-bold hover:bg-gray-100 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                  Start Trading
+                  <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              {/* Secondary Action */}
+              <button className="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full text-lg font-medium hover:bg-white/20 transition-all">
+                  <DocsIcon className="w-5 h-5" />
+                  Read the Whitepaper
+              </button>
+          </div>
+
+        </div>
       </main>
-      <Footer />
     </>
   );
 }
