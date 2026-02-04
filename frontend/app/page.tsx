@@ -1,12 +1,16 @@
 import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { ArrowRightIcon, DocsIcon } from "@/components/icons/HeroIcons";
+import { Features } from "@/components/home/Features";
 
 export default function Home() {
   return (
     <>
       <Header />
-      <main className="relative min-h-screen w-full flex flex-col overflow-hidden bg-sui-dark">
+      <main className="relative min-h-screen w-full flex flex-col bg-sui-dark overflow-x-hidden">
+        
+        {/* 1. HERO SECTION */}
+        <section className="relative h-screen w-full flex flex-col items-center justify-center">
         
         {/* 1. Background Layer (The Generated Image) */}
         <div className="absolute inset-0 z-0">
@@ -19,55 +23,59 @@ export default function Home() {
             quality={100}
             style={{ transform: 'scale(1.1)' }}
           />
-          {/* Gradient Overlay: Crucial for text visibility */}
-          {/* Fades from transparent top to dark blue bottom */}
-          <div className="absolute inset-0 bg-gradient-to-t from-sui-dark via-sui-dark/20 to-transparent" />
+          {/* Gradient for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-sui-dark/30 via-transparent to-sui-dark" />
         </div>
 
-        {/* 2. Content Layer - Lowered & Centered */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end items-center text-center pb-32 md:pb-48 px-4 max-w-5xl mx-auto w-full h-full">
+        {/* Content Layer */}
+        {/* Added 'pt-20' to push content down away from navbar */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-5xl px-4 pt-20">
           
-          {/* Branding Title */}
-          <div className="flex items-center justify-center gap-3 mb-6">
-              <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white drop-shadow-2xl">
-              SuiTent
-              </h1>
-              <span className="px-3 py-1 rounded-full border border-sui-blue bg-sui-blue/20 text-sui-blue text-xs font-bold uppercase tracking-widest backdrop-blur-md shadow-[0_0_15px_rgba(77,162,255,0.5)]">
+          {/* Badge */}
+          <div className="mb-6 animate-fade-in-up">
+              <span className="px-4 py-1.5 rounded-full border border-sui-blue/30 bg-sui-blue/10 text-sui-blue text-xs font-bold uppercase tracking-widest backdrop-blur-md shadow-[0_0_20px_rgba(77,162,255,0.3)]">
               Intent Layer
               </span>
           </div>
 
-          {/* Main Value Proposition - FIXED TEXT VISIBILITY */}
-          <h2 className="text-5xl md:text-7xl font-bold text-white mb-8 max-w-5xl leading-tight drop-shadow-xl">
+          {/* Title */}
+          <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white drop-shadow-2xl mb-6">
+            SuiTent
+          </h1>
+
+          {/* Headline - Fixed Visibility */}
+          <h2 className="text-5xl md:text-6xl font-bold text-white mb-8 leading-tight drop-shadow-xl">
             The First AI-Powered <br />
-            {/* Removed fading gradient, made it solid bright Cyan/Blue */}
-            <span className="text-[#4DA2FF] drop-shadow-[0_0_25px_rgba(77,162,255,0.6)]">
+            <span className="text-[#4DA2FF] drop-shadow-[0_0_30px_rgba(77,162,255,0.8)]">
               Intent Engine
             </span> on Sui.
           </h2>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-sui-steel mb-12 max-w-2xl leading-relaxed font-medium drop-shadow-lg mx-auto bg-black/10 backdrop-blur-sm rounded-xl p-2">
-            Don&apos;t just swap. <span className="text-white font-bold">Speak.</span> Translate natural language into complex on-chain strategies instantly.
+          <p className="text-xl text-sui-steel mb-10 max-w-2xl font-medium drop-shadow-md bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/5">
+            Don&apos;t just swap. <span className="text-white font-bold">Speak.</span> SuiTent translates natural language into complex on-chain strategies instantly.
           </p>
 
           {/* Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-5">
-              {/* Primary Action */}
-              <button className="group flex items-center gap-3 px-8 py-4 bg-sui-blue text-white rounded-full text-lg font-bold hover:bg-blue-500 transition-all shadow-[0_0_30px_rgba(77,162,255,0.5)] hover:scale-105">
+              <button className="group flex items-center gap-3 px-8 py-4 bg-sui-blue text-white rounded-full text-lg font-bold hover:bg-blue-500 transition-all shadow-[0_0_40px_rgba(77,162,255,0.4)] hover:scale-105">
                   Start Trading
                   <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </button>
 
-              {/* Secondary Action */}
-              <button className="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full text-lg font-semibold hover:bg-white/20 transition-all hover:scale-105">
+              <button className="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full text-lg font-semibold hover:bg-white/20 transition-all hover:scale-105">
                   <DocsIcon className="w-5 h-5" />
                   Read Whitepaper
               </button>
           </div>
 
         </div>
-      </main>
+      </section>
+
+      {/* 2. NEW FEATURES SECTION */}
+      <Features />
+
+    </main>
     </>
   );
 }
