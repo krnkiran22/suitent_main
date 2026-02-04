@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { ArrowRightIcon, DocsIcon } from "@/components/icons/HeroIcons";
 import { Features } from "@/components/home/Features";
 
@@ -71,6 +72,9 @@ export default function Home() {
 
       {/* 2. NEW FEATURES SECTION */}
       <Features />
+
+      {/* 3. FOOTER */}
+      <Footer />
 
     </main>
     </>
