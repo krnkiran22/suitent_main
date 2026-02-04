@@ -1,30 +1,15 @@
 "use client";
-import { Header } from "@/components/layout/Header";
-import { useState } from "react";
 
-// Simple Arrow Down SVG component
-function ArrowDown({ className }: { className?: string }) {
+import { SwapCard } from "@/components/swap/SwapCard";
+
+export default function SwapPage() {
   return (
-    <svg 
-      width="18" 
-      height="18" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="3" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <polyline points="19 12 12 19 5 12"></polyline>
-    </svg>
+    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-gray-900 to-black">
+      <SwapCard />
+    </main>
   );
 }
 
-export default function SwapPage() {
-  const [sellAmount, setSellAmount] = useState("");
-  const [buyAmount, setBuyAmount] = useState("");
 
   return (
     <>

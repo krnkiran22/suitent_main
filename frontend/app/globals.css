@@ -59,3 +59,111 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(77, 162, 255, 0.5);
 }
+
+/* Swap Component Styles */
+.swap-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.token-input-container {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.token-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  min-width: 120px;
+}
+
+.amount-input {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: right;
+  color: #e4e4e7;
+  width: 100%;
+  outline: none;
+}
+
+.amount-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.amount-input:disabled {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.swap-direction-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 18px;
+}
+
+.swap-direction-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  transform: rotate(180deg);
+}
+
+.swap-details {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #a1a1aa;
+}
+
+.swap-details-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.swap-btn {
+  width: 100%;
+  padding: 16px;
+  margin-top: 16px;
+  background: linear-gradient(135deg, #00f0ff 0%, #9945ff 100%);
+  border: none;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.swap-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+}
+
+.swap-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
