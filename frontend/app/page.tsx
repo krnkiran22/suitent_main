@@ -1,65 +1,113 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/common/Button";
+import { ArrowRight, Zap, Shield, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      <Header />
+      <main className="min-h-screen bg-sui-dark">
+        {/* Hero Section */}
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+          {/* Hero Glow Background */}
+          <div className="absolute inset-0 bg-hero-glow opacity-40" />
+          
+          {/* Animated Grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6 py-32 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sui-blue/10 border border-sui-blue/30 mb-8">
+                <Sparkles size={16} className="text-sui-blue" />
+                <span className="text-sm font-medium text-sui-blue">
+                  Built on Sui Network
+                </span>
+              </div>
+
+              {/* Main Heading */}
+              <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-6 leading-none">
+                Intent-Based
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sui-blue to-blue-400">
+                  Trading
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-xl md:text-2xl text-sui-mist max-w-2xl mx-auto mb-12">
+                Trade at the <span className="text-white font-semibold">Speed of Thought</span>.
+                <br />
+                Just tell us what you want to do.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link href="/chat">
+                  <Button size="lg" className="group">
+                    Start Trading
+                    <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+                <Link href="/portfolio">
+                  <Button size="lg" variant="secondary">
+                    View Portfolio
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Features Grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="grid md:grid-cols-3 gap-6 mt-32 max-w-5xl mx-auto"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              {[
+                {
+                  icon: Zap,
+                  title: "Lightning Fast",
+                  description: "Execute trades instantly with Sui's parallel processing"
+                },
+                {
+                  icon: Shield,
+                  title: "Self-Custody",
+                  description: "Your keys, your coins. Powered by Turnkey MPC"
+                },
+                {
+                  icon: Sparkles,
+                  title: "AI-Powered",
+                  description: "Natural language trading with Claude AI"
+                },
+              ].map((feature, index) => (
+                <div
+                  key={index}
+                  className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-sui-blue/50 transition-all"
+                >
+                  <feature.icon className="text-sui-blue mb-4" size={32} />
+                  <h3 className="text-lg font-bold text-white mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sui-mist text-sm">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
       </main>
-    </div>
+      <Footer />
+    </>
   );
 }
