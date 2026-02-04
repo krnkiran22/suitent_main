@@ -15,8 +15,9 @@ export default function Home() {
             alt="SuiTent Liquid Digital Landscape"
             fill
             priority
-            className="object-cover"
+            className="object-cover object-[center_40%]"
             quality={100}
+            style={{ transform: 'scale(1.1)' }}
           />
           {/* Gradient Overlay: Crucial for text visibility */}
           {/* Fades from transparent top to dark blue bottom */}
