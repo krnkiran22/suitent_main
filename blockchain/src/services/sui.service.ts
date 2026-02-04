@@ -1,5 +1,5 @@
 import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
-import { config } from "../config";
+import { config } from "../config/index.js";
 
 export class SuiService {
   private client: SuiJsonRpcClient;

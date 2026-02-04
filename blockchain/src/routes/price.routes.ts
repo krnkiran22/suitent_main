@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { deepBookService } from "../services/deepbook.service";
-import { QuoteRequest } from "../types";
+import { deepBookService } from "../services/deepbook.service.js";
+import { QuoteRequest } from "../types/index.js";
 
 const router = Router();
 

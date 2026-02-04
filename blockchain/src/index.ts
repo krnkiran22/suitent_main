@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
-import { config, validateConfig } from "./config";
-import routes from "./routes";
-import { errorHandler } from "./utils/errors";
+import { createServer } from "http";
+import { config, validateConfig } from "./config/index.js";
+import routes from "./routes/index.js";
+import { errorHandler } from "./utils/errors.js";
+import { websocketService } from "./services/websocket.service.js";
 
 // Validate configuration
 validateConfig();
@@ -47,8 +49,14 @@ app.get("/", (req, res) => {
 // Error handler (must be last)
 app.use(errorHandler);
 
+// Create HTTP server
+const server = createServer(app);
+
+// Initialize WebSocket server
+websocketService.initialize(server);
+
 // Start server
-app.listen(config.port, () => {
+server.listen(config.port, () => {
   console.log("🚀 SuiTent Backend Server Started");
   console.log(`   Port: ${config.port}`);
   console.log(`   Network: ${config.suiNetwork}`);
@@ -60,5 +68,6 @@ app.listen(config.port, () => {
   console.log(`   GET  http://localhost:${config.port}/api/pools`);
   console.log(`   POST http://localhost:${config.port}/api/price/quote`);
   console.log(`   POST http://localhost:${config.port}/api/swap/build`);
+  console.log(`   WS   ws://localhost:${config.port}/ws/quotes`);
   console.log("");
 });

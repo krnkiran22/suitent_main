@@ -1,4 +1,4 @@
-import { TOKENS, TokenSymbol } from "../config/tokens";
+import { TOKENS, TokenSymbol } from "../config/tokens.js";
 
 /**
  * Convert human-readable amount to raw amount (with decimals)

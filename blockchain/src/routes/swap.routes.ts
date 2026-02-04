@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
-import { deepBookService } from "../services/deepbook.service";
-import { suiService } from "../services/sui.service";
-import { SwapBuildRequest } from "../types";
+import { deepBookService } from "../services/deepbook.service.js";
+import { suiService } from "../services/sui.service.js";
+import { SwapBuildRequest } from "../types/index.js";
 
 const router = Router();
 

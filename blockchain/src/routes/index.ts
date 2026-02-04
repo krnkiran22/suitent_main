@@ -1,7 +1,7 @@
 import { Router } from "express";
-import poolsRoutes from "./pools.routes";
-import priceRoutes from "./price.routes";
-import swapRoutes from "./swap.routes";
+import poolsRoutes from "./pools.routes.js";
+import priceRoutes from "./price.routes.js";
+import swapRoutes from "./swap.routes.js";
 
 const router = Router();
 

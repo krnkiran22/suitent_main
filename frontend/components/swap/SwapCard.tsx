@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTurnkey } from "@turnkey/react-wallet-kit";
 import { useSwap } from "@/hooks/useSwap";
 import { useBalances } from "@/hooks/useBalances";
+import { useWebSocketQuote } from "@/hooks/useWebSocketQuote";
 import { getAllTokens, Token } from "@/lib/tokens";
 
 export function SwapCard() {
@@ -14,14 +15,25 @@ export function SwapCard() {
   const walletAddress = wallets?.[0]?.accounts?.[0]?.address;
   const isConnected = authState === "authenticated";
 
-  // Swap hook
+  // Form state
+  const [tokenIn, setTokenIn] = useState<Token>(getAllTokens()[0]); // SUI
+  const [tokenOut, setTokenOut] = useState<Token>(getAllTokens()[1]); // USDC
+  const [amountIn, setAmountIn] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Real-time quote via WebSocket
   const {
-    quote,
+    quote: wsQuote,
+    loading: wsLoading,
+    error: wsError,
+    connected: wsConnected,
+  } = useWebSocketQuote(tokenIn.symbol, tokenOut.symbol, amountIn);
+
+  // Swap execution hook
+  const {
     loading,
-    quoteLoading,
-    error,
+    error: swapError,
     txDigest,
-    fetchQuote,
     executeSwap,
     reset,
   } = useSwap();
@@ -29,25 +41,8 @@ export function SwapCard() {
   // Balances
   const { balances, getBalance, refetch: refetchBalances } = useBalances(walletAddress);
 
-  // Form state
-  const [tokenIn, setTokenIn] = useState<Token>(getAllTokens()[0]); // SUI
-  const [tokenOut, setTokenOut] = useState<Token>(getAllTokens()[1]); // USDC
-  const [amountIn, setAmountIn] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
-
   console.log("[SwapCard] Render - Connected:", isConnected, "Address:", walletAddress);
-
-  // Fetch quote when amount changes (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (amountIn && parseFloat(amountIn) > 0) {
-        console.log("[SwapCard] Fetching quote for:", amountIn, tokenIn.symbol);
-        fetchQuote(tokenIn.symbol, tokenOut.symbol, amountIn);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [amountIn, tokenIn.symbol, tokenOut.symbol, fetchQuote]);
+  console.log("[SwapCard] WebSocket:", wsConnected ? "Connected" : "Disconnected", "Quote:", wsQuote?.estimatedAmountOut);
 
   // Handle swap direction toggle
   const handleSwapDirection = useCallback(() => {
@@ -90,16 +85,25 @@ export function SwapCard() {
     if (parseFloat(amountIn) > parseFloat(getBalance(tokenIn.symbol))) {
       return { text: "Insufficient Balance", disabled: true };
     }
-    if (quoteLoading) return { text: "Getting Quote...", disabled: true };
+    if (wsLoading) return { text: "Getting Quote...", disabled: true };
     if (loading) return { text: "Swapping...", disabled: true };
     return { text: "Swap", disabled: false, action: handleSwap };
   };
 
   const buttonState = getButtonState();
+  const displayError = wsError || swapError;
 
   return (
     <div className="swap-card">
-      <h2 className="text-xl font-bold mb-6 text-center">Swap</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">Swap</h2>
+        {wsConnected && (
+          <div className="flex items-center gap-2 text-xs text-green-400">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            Live
+          </div>
+        )}
+      </div>
 
       {/* Token In */}
       <div className="token-input-container">
@@ -147,7 +151,7 @@ export function SwapCard() {
           </div>
           <input
             type="text"
-            value={quote?.tokenOut.estimatedAmount || ""}
+            value={wsQuote?.estimatedAmountOut || ""}
             placeholder="0.0"
             disabled
             className="amount-input"
@@ -156,31 +160,31 @@ export function SwapCard() {
       </div>
 
       {/* Quote Details */}
-      {quote && (
+      {wsQuote && (
         <div className="swap-details">
           <div className="swap-details-row">
             <span>Rate</span>
-            <span>1 {tokenIn.symbol} = {quote.exchangeRate} {tokenOut.symbol}</span>
+            <span>1 {tokenIn.symbol} = {wsQuote.pricePerToken} {tokenOut.symbol}</span>
           </div>
           <div className="swap-details-row">
             <span>Price Impact</span>
-            <span>{quote.priceImpact}%</span>
+            <span className={parseFloat(wsQuote.priceImpact) > 1 ? "text-red-400" : ""}>{wsQuote.priceImpact}%</span>
           </div>
           <div className="swap-details-row">
             <span>Min. Received</span>
-            <span>{quote.tokenOut.minAmount} {tokenOut.symbol}</span>
+            <span>{(parseFloat(wsQuote.estimatedAmountOut) * 0.99).toFixed(6)} {tokenOut.symbol}</span>
           </div>
           <div className="swap-details-row">
             <span>Network Fee</span>
-            <span>~{quote.networkFee} SUI</span>
+            <span>~0.005 SUI</span>
           </div>
         </div>
       )}
 
       {/* Error Display */}
-      {error && (
+      {displayError && (
         <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-          {error}
+          {displayError}
         </div>
       )}
 
@@ -219,7 +223,8 @@ export function SwapCard() {
       {process.env.NODE_ENV === "development" && (
         <div className="mt-4 p-2 bg-gray-800/50 rounded text-xs text-gray-500">
           <div>Wallet: {walletAddress ? `${walletAddress.substring(0, 10)}...` : "Not connected"}</div>
-          <div>Quote Loading: {quoteLoading ? "Yes" : "No"}</div>
+          <div>WebSocket: {wsConnected ? "Connected ✅" : "Disconnected ❌"}</div>
+          <div>Quote Loading: {wsLoading ? "Yes" : "No"}</div>
           <div>Swap Loading: {loading ? "Yes" : "No"}</div>
         </div>
       )}

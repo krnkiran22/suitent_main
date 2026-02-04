@@ -1,6 +1,6 @@
-import { config } from "../config";
-import { Pool } from "../types";
-import { ApiError, ErrorCodes } from "../utils/errors";
+import { config } from "../config/index.js";
+import { Pool } from "../types/index.js";
+import { ApiError, ErrorCodes } from "../utils/errors.js";
 
 export class PoolService {
   private poolCache: Map<string, Pool> = new Map();
