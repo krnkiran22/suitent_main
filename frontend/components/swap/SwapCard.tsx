@@ -4,21 +4,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useCurrentAccount, ConnectButton } from "@mysten/dapp-kit";
+import { useTurnkey } from "@turnkey/react-wallet-kit";
 import { useUniversalSwap } from "@/hooks/useUniversalSwap";
 import { useBalances } from "@/hooks/useBalances";
 import { useWebSocketQuote } from "@/hooks/useWebSocketQuote";
 import { getAllTokens, Token } from "@/lib/tokens";
 import { TokenSelector } from "./TokenSelector";
+import { UnifiedConnectButton } from "../wallet/UnifiedConnectButton";
 
 export function SwapCard() {
-  // Browser wallets only (Suiet, Welldone, Sui Wallet)
-  const standardAccount = useCurrentAccount();
-  const walletAddress = standardAccount?.address;
-  const isConnected = !!standardAccount;
-
+  // Get all tokens safely
+  const allTokens = getAllTokens();
+  
   // Form state
-  const [tokenIn, setTokenIn] = useState<Token>(getAllTokens()[0]); // SUI
-  const [tokenOut, setTokenOut] = useState<Token>(getAllTokens()[1]); // DEEP (was USDC/DBUSDC)
+  const [tokenIn, setTokenIn] = useState<Token>(allTokens[0]); // SUI
+  const [tokenOut, setTokenOut] = useState<Token>(allTokens[1]); // DEEP (was USDC/DBUSDC)
   const [amountIn, setAmountIn] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -39,6 +39,13 @@ export function SwapCard() {
     reset,
     walletType,
   } = useUniversalSwap();
+
+  // Get wallet address from hook
+  const standardAccount = useCurrentAccount();
+  const { wallets: turnkeyWallets } = useTurnkey();
+  const turnkeyAddress = turnkeyWallets?.[0]?.accounts?.[0]?.address;
+  const walletAddress = standardAccount?.address || turnkeyAddress;
+  const isConnected = !!walletAddress;
 
   // Balances
   const { balances, getBalance, refetch: refetchBalances } = useBalances(walletAddress);
@@ -208,11 +215,9 @@ export function SwapCard() {
 
       {/* Swap Button / Connect Button */}
       {!isConnected ? (
-        // Browser wallet connect button
+        // Unified connect button (Browser + Turnkey)
         <div className="mt-6">
-          <ConnectButton 
-            connectText="Connect Wallet to Swap"
-          />
+          <UnifiedConnectButton />
         </div>
       ) : (
         // Swap button (when connected)

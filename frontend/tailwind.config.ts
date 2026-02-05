@@ -12,11 +12,19 @@ const config: Config = {
         // Sui Brand Colors
         sui: {
           blue: "#4DA2FF",     // The electric blue from the "Get Started" button
-          dark: "#05060A",     // Deepest black-blue background
+          dark: "#0a0a0f",     // Main background
           ocean: "#111827",    // Secondary dark for cards
           steel: "#E0E5EB",    // Primary text
           mist: "#94A3B8",     // Secondary text
           ghost: "rgba(255, 255, 255, 0.05)", // Glass effect
+        },
+        // Slush Wallet Style
+        slush: {
+          bg: "#0D111C",       // Deep Navy Background
+          card: "#131825",     // Lighter Navy (Input Fields)
+          input: "#1A2133",    // Interactive Fields
+          text: "#9CA3AF",     // Secondary Text
+          border: "rgba(255, 255, 255, 0.08)",
         },
         // Functional Colors
         success: "#22C55E",    // Green for executed trades
