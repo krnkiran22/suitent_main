@@ -17,6 +17,13 @@ export const TOKENS: Record<string, Token> = {
     coinType: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
     iconUrl: "https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg",
   },
+  USDC: {
+    symbol: "USDC",
+    name: "USD Coin",
+    decimals: 6,
+    coinType: "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC",
+    iconUrl: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
+  },
   DBUSDC: {
     symbol: "DBUSDC",
     name: "Deepbook USDC",

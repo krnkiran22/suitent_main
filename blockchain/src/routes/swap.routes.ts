@@ -109,39 +109,60 @@ router.get("/balances/:walletAddress", async (req: Request, res: Response) => {
       return coinType.replace(/^0x0+2::/, '0x2::');
     };
     
-    // Map raw balances to our token configuration
-    const balances = rawBalances.map((balance: any) => {
-      const normalizedBalanceCoinType = normalizeCoinType(balance.coinType);
-      
-      // Find matching token by coinType
-      const tokenEntry = Object.entries(TOKENS).find(
-        ([_, token]) => {
-          const normalizedTokenCoinType = normalizeCoinType(token.coinType);
-          return normalizedTokenCoinType === normalizedBalanceCoinType;
+    // Extract symbol from coinType string (e.g., "0x...::module::SYMBOL" -> "SYMBOL")
+    const extractSymbol = (coinType: string): string => {
+      const parts = coinType.split('::');
+      return parts[parts.length - 1] || 'UNKNOWN';
+    };
+    
+    // Map raw balances - include ALL tokens with balance > 0
+    const balances = rawBalances
+      .filter((balance: any) => Number(balance.totalBalance) > 0) // Only non-zero balances
+      .map((balance: any) => {
+        const normalizedBalanceCoinType = normalizeCoinType(balance.coinType);
+        
+        // Try to find matching token in our config
+        const tokenEntry = Object.entries(TOKENS).find(
+          ([_, token]) => {
+            const normalizedTokenCoinType = normalizeCoinType(token.coinType);
+            return normalizedTokenCoinType === normalizedBalanceCoinType;
+          }
+        );
+        
+        if (tokenEntry) {
+          // Known token from config
+          const [symbol, tokenConfig] = tokenEntry;
+          const formattedBalance = (Number(balance.totalBalance) / Math.pow(10, tokenConfig.decimals)).toFixed(6);
+          console.log(`[BalanceRoute] Mapped ${symbol}: ${formattedBalance} (${balance.totalBalance} raw)`);
+          return {
+            symbol: tokenConfig.symbol,
+            name: tokenConfig.symbol,
+            balance: formattedBalance,
+            balanceRaw: balance.totalBalance,
+            decimals: tokenConfig.decimals,
+            coinType: balance.coinType,
+            iconUrl: "",
+          };
+        } else {
+          // Unknown token - still show it with extracted symbol
+          const symbol = extractSymbol(balance.coinType);
+          const decimals = 9; // Default to 9 decimals for unknown tokens
+          const formattedBalance = (Number(balance.totalBalance) / Math.pow(10, decimals)).toFixed(6);
+          console.log(`[BalanceRoute] Unknown token ${symbol}: ${formattedBalance} (${balance.totalBalance} raw)`);
+          console.log(`[BalanceRoute] CoinType: ${balance.coinType}`);
+          return {
+            symbol,
+            name: symbol,
+            balance: formattedBalance,
+            balanceRaw: balance.totalBalance,
+            decimals,
+            coinType: balance.coinType,
+            iconUrl: "",
+          };
         }
-      );
-      
-      if (tokenEntry) {
-        const [symbol, tokenConfig] = tokenEntry;
-        const formattedBalance = (Number(balance.totalBalance) / Math.pow(10, tokenConfig.decimals)).toFixed(6);
-        console.log(`[BalanceRoute] Mapped ${symbol}: ${formattedBalance} (${balance.totalBalance} raw)`);
-        return {
-          symbol: tokenConfig.symbol,
-          name: tokenConfig.symbol,
-          balance: formattedBalance,
-          balanceRaw: balance.totalBalance,
-          decimals: tokenConfig.decimals,
-          coinType: tokenConfig.coinType,
-          iconUrl: "",
-        };
-      } else {
-        console.log(`[BalanceRoute] No token config match for: ${balance.coinType}`);
-      }
-      
-      return null;
-    }).filter((b: any) => b !== null);
+      });
 
-    console.log(`[BalanceRoute] Returning ${balances.length} mapped balances`);
+    console.log(`[BalanceRoute] Returning ${balances.length} balances (all non-zero)`);
     res.json({ balances });
   } catch (error) {
     throw error;

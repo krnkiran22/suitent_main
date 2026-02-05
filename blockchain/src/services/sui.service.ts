@@ -1,32 +1,46 @@
-import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
-import { deepbook } from "@mysten/deepbook-v3";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+import { DeepBookClient } from "@mysten/deepbook-v3";
 import { config } from "../config/index.js";
 
 export class SuiService {
   private client: SuiJsonRpcClient;
-  private deepbookClient: ReturnType<SuiJsonRpcClient["$extend"]> | null = null;
 
   constructor() {
+    // JSON-RPC client for regular operations with explicit 'testnet' network
     this.client = new SuiJsonRpcClient({
-      network: config.suiNetwork as "mainnet" | "testnet" | "devnet",
+      network: 'testnet', // Must be explicit 'testnet' or 'mainnet'
       url: config.suiRpcUrl,
     });
+    
+    console.log("[SuiService] Sui client created with network:", (this.client as any).network);
   }
 
   getClient(): SuiJsonRpcClient {
     return this.client;
   }
 
-  getDeepBookClient(address?: string) {
-    if (!this.deepbookClient) {
-      console.log("[SuiService] Creating DeepBook extended client...");
-      this.deepbookClient = this.client.$extend(
-        deepbook({
-          address: address || "0x0000000000000000000000000000000000000000000000000000000000000000",
-        })
-      );
-    }
-    return this.deepbookClient;
+  getDeepBookClient(address: string): DeepBookClient {
+    console.log("[SuiService] Creating DeepBookClient for address:", address);
+    console.log("[SuiService] Client network:", (this.client as any).network);
+    console.log("[SuiService] Config network:", config.suiNetwork);
+    
+    // Use DeepBookClient directly
+    // Pass network explicitly since auto-detection from client doesn't work
+    const deepBookClient = new DeepBookClient({
+      address: address,
+      client: this.client,
+      network: 'testnet', // Try passing network directly instead of env
+    } as any); // Type cast since we're trying undocumented parameter
+    
+    console.log("[SuiService] DeepBookClient created");
+    console.log("[SuiService] DeepBookClient type:", typeof deepBookClient);
+    console.log("[SuiService] DeepBookClient keys:", Object.keys(deepBookClient));
+    
+    // Check for swap methods on deepBook property
+    console.log("[SuiService] Has deepBook.swapExactBaseForQuote:", 'swapExactBaseForQuote' in (deepBookClient as any).deepBook);
+    console.log("[SuiService] deepBook.swapExactBaseForQuote type:", typeof (deepBookClient as any).deepBook.swapExactBaseForQuote);
+    
+    return deepBookClient;
   }
 
   async getBalance(address: string, coinType: string): Promise<string> {

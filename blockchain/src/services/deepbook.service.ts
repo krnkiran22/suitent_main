@@ -33,9 +33,6 @@ export class DeepBookService {
     // Get pool for this pair
     const pool = await poolService.getPoolByPair(tokenIn, tokenOut);
     console.log(`[DeepBookService] Using pool: ${pool.poolName} (${pool.poolId})`);
-
-    // Get DeepBook extended client
-    const deepBook = suiService.getDeepBookClient();
     
     // Determine if we're swapping base->quote or quote->base
     const isBaseToQuote = tokenIn === "SUI"; // SUI is base, DBUSDC is quote
@@ -146,15 +143,38 @@ export class DeepBookService {
       // Build transaction
       console.log(`[DeepBookService] Building swap transaction for ${walletAddress}`);
       
-      // Get DeepBook extended client
-      const deepBook = suiService.getDeepBookClient();
+      // Get DeepBook client with user's address
+      const deepBookClient = suiService.getDeepBookClient(walletAddress);
+      
+      // Verify client structure
+      console.log(`[DeepBookService] DeepBookClient type:`, typeof deepBookClient);
+      console.log(`[DeepBookService] DeepBookClient keys:`, Object.keys(deepBookClient));
+      console.log(`[DeepBookService] Has deepBook property:`, 'deepBook' in deepBookClient);
+      
+      if ('deepBook' in deepBookClient) {
+        const deepBook = (deepBookClient as any).deepBook;
+        console.log(`[DeepBookService] deepBook keys:`, Object.keys(deepBook));
+        console.log(`[DeepBookService] deepBook.swapExactBaseForQuote type:`, typeof deepBook.swapExactBaseForQuote);
+        
+        if (typeof deepBook.swapExactBaseForQuote === 'function') {
+          console.log(`[DeepBookService] ✓ swapExactBaseForQuote is a function!`);
+        }
+      }
       
       // Create transaction
       const tx = new Transaction();
       tx.setSender(walletAddress);
+      
+      // Set gas budget (important: reserve SUI for gas fees)
+      tx.setGasBudget(50000000); // 0.05 SUI for gas
 
       // Determine swap direction (base to quote or quote to base)
       const isBaseToQuote = tokenIn === "SUI"; // SUI is base, DBUSDC is quote
+      
+      console.log(`[DeepBookService] Building swap transaction`);
+      console.log(`[DeepBookService] Pool: ${pool.poolName}`);
+      console.log(`[DeepBookService] Direction: ${isBaseToQuote ? 'base->quote (SUI->DBUSDC)' : 'quote->base (DBUSDC->SUI)'}`);
+      console.log(`[DeepBookService] Amount: ${amountIn}, Min out: ${minAmountOut}`);
       
       // Get user's coins for the input token
       const coins = await suiService.getClient().getCoins({
@@ -168,19 +188,94 @@ export class DeepBookService {
 
       console.log(`[DeepBookService] Found ${coins.data.length} ${tokenIn} coin objects`);
 
-      // For now, return a simple transfer transaction as placeholder
-      // TODO: Implement proper DeepBook V3 swap contract calls
-      // The DeepBook V3 SDK extended client methods are not yet properly documented
-      console.log(`[DeepBookService] Building transaction with pool: ${pool.poolName}`);
-      console.log(`[DeepBookService] Swap direction: ${isBaseToQuote ? 'base->quote' : 'quote->base'}`);
-      console.log(`[DeepBookService] Amount in: ${amountIn}, Min out: ${minAmountOut}`);
+      // Prepare baseCoin explicitly (SDK docs: "Passing baseCoin ensures the swap uses a real SUI coin")
+      const amountInRaw = toRawAmount(amountIn, tokenInConfig.decimals);
+      console.log(`[DeepBookService] Amount in raw: ${amountInRaw}`);
       
-      // Create a basic transaction structure
-      // Note: This is a placeholder - proper DeepBook integration requires
-      // calling the correct move functions on the DeepBook contract
-      const coinToUse = coins.data[0];
+      const totalBalance = coins.data.reduce((sum, c) => sum + BigInt(c.balance), 0n);
+      console.log(`[DeepBookService] Total balance: ${totalBalance}`);
+      
+      if (totalBalance < amountInRaw) {
+        throw new ApiError(400, `Insufficient ${tokenIn} balance`, ErrorCodes.INVALID_AMOUNT);
+      }
+
+      // SDK will auto-select coins from address (baseCoin/quoteCoin/deepCoin optional)
+      console.log(`[DeepBookService] Letting SDK auto-select coins for swap`);
+
+      // Use DeepBook SDK swap helper - no BalanceManager required
+      try {
+        console.log(`[DeepBookService] Using deepBookClient.deepBook.swapExactBaseForQuote...`);
+        console.log(`[DeepBookService] Swap params:`, {
+          poolKey: pool.poolName,
+          amountIn: amountIn,
+          amountInFloat: parseFloat(amountIn),
+          minAmountOut: minAmountOut,
+          minAmountOutFloat: parseFloat(minAmountOut),
+        });
+        
+        // Swap exact base for quote (SUI → DBUSDC)
+        // SDK docs: "Passing baseCoin ensures the swap uses a real SUI coin"
+        // Pass BOTH amount (how much to swap) and baseCoin (which coin to use)
+        console.log(`[DeepBookService] Calling swapExactBaseForQuote with amount=${amountIn}...`);
+        
+        // Convert minOut to raw units for the SDK
+        const tokenOutConfig = getTokenConfig(tokenOut as TokenSymbol);
+        console.log(`[DeepBookService] Token out: ${tokenOut}, decimals: ${tokenOutConfig.decimals}`);
+        console.log(`[DeepBookService] minAmountOut input: ${minAmountOut} (type: ${typeof minAmountOut})`);
+        
+        const minOutRaw = toRawAmount(minAmountOut, tokenOutConfig.decimals);
+        console.log(`[DeepBookService] minOutRaw after conversion: ${minOutRaw.toString()}`);
+        
+        console.log(`[DeepBookService] Swap parameters:`, {
+          poolKey: pool.poolName,
+          amount: parseFloat(amountIn),
+          deepAmount: 0,
+          minOut: parseFloat(minAmountOut),
+          minOutRaw: minOutRaw.toString(),
+          minOutRawInt: parseInt(minOutRaw.toString()),
+          amountType: typeof parseFloat(amountIn),
+          minOutType: typeof parseFloat(minAmountOut),
+        });
+        
+        const swapResult = (deepBookClient as any).deepBook.swapExactBaseForQuote({
+          poolKey: pool.poolName,
+          amount: parseFloat(amountIn),  // How much to swap (0.2 SUI)
+          deepAmount: 0,
+          minOut: parseInt(minOutRaw.toString()), // Raw units: 209484 (6 decimals)
+          // baseCoin: NOT passing - let SDK auto-select from address
+        })(tx);
+        
+        console.log(`[DeepBookService] Swap result type:`, typeof swapResult);
+        
+        // The result should be [baseOut, quoteOut, deepOut]
+        const [baseOut, quoteOut, deepOut] = Array.isArray(swapResult) ? swapResult : [null, swapResult, null];
+        
+        console.log(`[DeepBookService] Swap outputs created:`, {
+          baseOut: typeof baseOut,
+          quoteOut: typeof quoteOut,
+          deepOut: typeof deepOut,
+        });
+        console.log(`[DeepBookService] Transferring outputs to wallet:`, walletAddress);
+        
+        // Transfer ALL outputs to the user's wallet (required to avoid UnusedValueWithoutDrop error)
+        // baseOut: leftover base coin (if any)
+        // quoteOut: the quote coin we receive (DBUSDC)
+        // deepOut: DEEP token rewards (if any)
+        tx.transferObjects([baseOut, quoteOut, deepOut], walletAddress);
+        
+        console.log(`[DeepBookService] Swap transaction built successfully`);
+        
+        // Log transaction details for debugging
+        console.log(`[DeepBookService] Transaction block data:`, JSON.stringify(tx.blockData, null, 2));
+      } catch (swapError: any) {
+        console.error(`[DeepBookService] Failed to build swap:`, swapError);
+        throw new ApiError(500, `Failed to build swap transaction: ${swapError.message}`, ErrorCodes.INTERNAL_ERROR);
+      }
       
       // Build transaction bytes
+      console.log(`[DeepBookService] Building transaction bytes...`);
+      console.log(`[DeepBookService] Transaction data:`, JSON.stringify((tx as any).blockData, null, 2));
+      
       const txBytes = await tx.build({ client: suiService.getClient() });
       const txBytesBase64 = Buffer.from(txBytes).toString("base64");
       
