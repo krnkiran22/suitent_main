@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { TokenBalanceList } from "./TokenBalanceList";
 import { formatAddress } from "@/lib/utils/format";
@@ -11,13 +11,17 @@ interface WalletDropdownProps {
 
 export function WalletDropdown({ address, onClose, onDisconnect }: WalletDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
   
   // Close when clicking outside
   useClickOutside(dropdownRef, onClose);
 
+  console.log('[WalletDropdown] Rendering with address:', address);
+
   const copyAddress = () => {
     navigator.clipboard.writeText(address);
-    // TODO: Show toast notification
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -27,20 +31,36 @@ export function WalletDropdown({ address, onClose, onDisconnect }: WalletDropdow
     >
       {/* Header: Address + Copy */}
       <div className="p-4 border-b border-white/5">
+        <div className="mb-2">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Wallet Address</span>
+        </div>
         <button
           onClick={copyAddress}
-          className="w-full flex items-center justify-between px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors group"
+          className="w-full flex items-center justify-between px-4 py-3 bg-white/90 hover:bg-white rounded-xl transition-colors group"
         >
-          <span className="text-sm font-mono text-white">{formatAddress(address, 6)}</span>
-          <svg
-            className="w-4 h-4 text-gray-400 group-hover:text-sui-blue transition-colors"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
+          <span className="text-sm font-mono text-gray-900 font-semibold break-all text-left">{address}</span>
+          <div className="ml-3 flex-shrink-0">
+            {copied ? (
+              <svg
+                className="w-4 h-4 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg
+                className="w-4 h-4 text-gray-400 group-hover:text-sui-blue transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </div>
         </button>
       </div>
 

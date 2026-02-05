@@ -8,11 +8,11 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                 <div className="w-3 h-4 bg-sui-blue rounded-b-full"></div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-sui-blue to-purple-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(77,162,255,0.3)]">
+                 <div className="w-4 h-5 bg-white rounded-b-full"></div>
               </div>
-              <span className="text-xl font-bold text-white tracking-tight">SuiTent</span>
+              <span className="text-2xl font-black text-white tracking-tight">SuiTent</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               The first AI-powered intent engine on Sui. Trade at the speed of thought.

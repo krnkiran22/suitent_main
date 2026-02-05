@@ -32,11 +32,38 @@ export function TurnkeyAuthButton({ onSuccess }: TurnkeyAuthButtonProps) {
     }
   }, [isAuthenticated, onSuccess]);
 
+  const handleDisconnect = async () => {
+    try {
+      console.log("[TurnkeyAuth] Disconnecting...");
+      await logout();
+      
+      // Clear all Turnkey-related localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('turnkey') || key.includes('Turnkey')) {
+          localStorage.removeItem(key);
+          console.log("[TurnkeyAuth] Cleared localStorage:", key);
+        }
+      });
+      
+      console.log("[TurnkeyAuth] Disconnect successful!");
+    } catch (error) {
+      console.error("[TurnkeyAuth] Disconnect failed:", error);
+    }
+  };
+
   if (isAuthenticated) {
     const address = wallets[0]?.accounts?.[0]?.address;
     return (
-      <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-400 text-sm">
-        🔐 Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+      <div className="space-y-3">
+        <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-400 text-sm">
+          🔐 Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+        </div>
+        <button
+          onClick={handleDisconnect}
+          className="w-full px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 font-semibold text-sm transition-all"
+        >
+          Disconnect Turnkey
+        </button>
       </div>
     );
   }

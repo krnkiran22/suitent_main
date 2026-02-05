@@ -24,18 +24,18 @@ export function Features() {
     <section className="relative w-full bg-white py-32 px-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        {/* Section Header - Centered */}
+        <div className="flex flex-col items-center text-center mb-16 gap-6">
           <div>
             {/* Dark Text for White Background */}
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Explore the <span className="text-sui-blue">SuiTent Ecosystem</span>
             </h2>
-            <p className="text-gray-600 text-lg max-w-xl leading-relaxed">
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
               The power of a professional trading terminal, accessible through a simple chat interface.
             </p>
           </div>
-          <button className="text-sui-blue border-b border-sui-blue/30 pb-1 hover:border-sui-blue font-semibold transition-colors flex items-center gap-2">
+          <button className="text-sui-blue border border-sui-blue/30 px-6 py-3 rounded-full hover:bg-sui-blue/5 font-semibold transition-all flex items-center gap-2 hover:scale-105">
             View Documentation <ArrowRightIcon className="w-4 h-4" />
           </button>
         </div>

@@ -102,9 +102,7 @@ export function TurnkeySwapCard() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-xl font-bold">Swap with Turnkey</h2>
-              <p className="text-xs text-gray-500 mt-1">
-                🔐 Turnkey Wallet
-              </p>
+             
             </div>
             <div className="flex items-center gap-3">
               <div className="px-3 py-1 bg-purple-500/10 border border-purple-500/30 rounded-full text-xs font-semibold text-purple-400">

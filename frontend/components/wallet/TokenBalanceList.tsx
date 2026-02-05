@@ -8,6 +8,11 @@ interface TokenBalanceListProps {
 export function TokenBalanceList({ address }: TokenBalanceListProps) {
   const { balances, isLoading, error } = useWalletBalances(address);
 
+  console.log('[TokenBalanceList] address:', address);
+  console.log('[TokenBalanceList] balances:', balances);
+  console.log('[TokenBalanceList] isLoading:', isLoading);
+  console.log('[TokenBalanceList] error:', error);
+
   if (isLoading) {
     return (
       <div className="space-y-3">

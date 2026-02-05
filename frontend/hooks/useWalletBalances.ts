@@ -27,15 +27,26 @@ export function useWalletBalances(address: string | undefined) {
       setError(null);
 
       try {
+        // Normalize address to full 66-char Sui format (0x + 64 hex chars)
+        let normalizedAddress = address;
+        if (address.startsWith('0x')) {
+          const hexPart = address.slice(2);
+          if (hexPart.length < 64) {
+            // Pad with leading zeros
+            normalizedAddress = '0x' + hexPart.padStart(64, '0');
+            console.log("Normalized address from", address, "to", normalizedAddress);
+          }
+        }
+
         const suiClient = new SuiJsonRpcClient({ 
           network: "testnet",
           url: getJsonRpcFullnodeUrl("testnet") 
         });
 
-        console.log("Fetching balances for:", address);
+        console.log("Fetching balances for:", normalizedAddress);
         
         // 1. Get all coin balances
-        const allBalances = await suiClient.getAllBalances({ owner: address });
+        const allBalances = await suiClient.getAllBalances({ owner: normalizedAddress });
         
         console.log("Got balances:", allBalances);
 
