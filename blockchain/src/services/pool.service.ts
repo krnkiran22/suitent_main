@@ -32,7 +32,7 @@ export class PoolService {
       
       for (const pool of pools) {
         // Use base_asset_symbol and quote_asset_symbol from indexer
-        this.poolCache.set(pool.pool_name, {
+        const poolData = {
           poolId: pool.pool_id,
           poolName: pool.pool_name,
           baseCoin: pool.base_asset_symbol,
@@ -41,7 +41,12 @@ export class PoolService {
           quoteDecimals: pool.quote_asset_decimals || 6,
           lotSize: pool.lot_size?.toString() || "1000000",
           tickSize: pool.tick_size?.toString() || "1000",
-        });
+        };
+        
+        this.poolCache.set(pool.pool_name, poolData);
+        
+        // Log each pool for debugging
+        console.log(`[PoolService] Added pool: ${pool.pool_name} (${pool.base_asset_symbol}/${pool.quote_asset_symbol})`);
       }
       
       this.lastFetch = now;
@@ -65,21 +70,31 @@ export class PoolService {
     }
   }
 
-  async getPoolByPair(baseCoin: string, quoteCoin: string): Promise<Pool> {
+  async getPoolByPair(baseCoin: string, quoteCoin: string): Promise<Pool & { isReversed: boolean }> {
     await this.fetchPools(); // Ensure cache is fresh
     
+    // Try the requested direction first
     const poolName = `${baseCoin}_${quoteCoin}`;
-    const pool = this.poolCache.get(poolName);
+    let pool = this.poolCache.get(poolName);
     
-    if (!pool) {
-      throw new ApiError(
-        404,
-        `Pool not found for pair ${baseCoin}/${quoteCoin}`,
-        ErrorCodes.POOL_NOT_FOUND
-      );
+    if (pool) {
+      return { ...pool, isReversed: false };
     }
     
-    return pool;
+    // Try reverse direction (e.g., SUI_DEEP doesn't exist, but DEEP_SUI does)
+    const reversePoolName = `${quoteCoin}_${baseCoin}`;
+    pool = this.poolCache.get(reversePoolName);
+    
+    if (pool) {
+      console.log(`[PoolService] Using reverse pool: ${reversePoolName} for ${baseCoin}/${quoteCoin}`);
+      return { ...pool, isReversed: true };
+    }
+    
+    throw new ApiError(
+      404,
+      `Pool not found for pair ${baseCoin}/${quoteCoin} or reverse ${quoteCoin}/${baseCoin}`,
+      ErrorCodes.POOL_NOT_FOUND
+    );
   }
 
   async getPoolById(poolId: string): Promise<Pool | undefined> {

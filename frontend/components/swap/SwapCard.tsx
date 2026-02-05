@@ -3,18 +3,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useTurnkey } from "@turnkey/react-wallet-kit";
-import { useSwap } from "@/hooks/useSwap";
+import { useCurrentAccount, ConnectButton } from "@mysten/dapp-kit";
+import { useUniversalSwap } from "@/hooks/useUniversalSwap";
 import { useBalances } from "@/hooks/useBalances";
 import { useWebSocketQuote } from "@/hooks/useWebSocketQuote";
 import { getAllTokens, Token } from "@/lib/tokens";
 import { TokenSelector } from "./TokenSelector";
 
 export function SwapCard() {
-  // Turnkey wallet
-  const { wallets, handleLogin, authState } = useTurnkey();
-  const walletAddress = wallets?.[0]?.accounts?.[0]?.address;
-  const isConnected = authState === "authenticated";
+  // Browser wallets only (Suiet, Welldone, Sui Wallet)
+  const standardAccount = useCurrentAccount();
+  const walletAddress = standardAccount?.address;
+  const isConnected = !!standardAccount;
 
   // Form state
   const [tokenIn, setTokenIn] = useState<Token>(getAllTokens()[0]); // SUI
@@ -30,14 +30,15 @@ export function SwapCard() {
     connected: wsConnected,
   } = useWebSocketQuote(tokenIn.symbol, tokenOut.symbol, amountIn);
 
-  // Swap execution hook
+  // Swap execution hook (supports both wallet types)
   const {
     loading,
     error: swapError,
     txDigest,
     executeSwap,
     reset,
-  } = useSwap();
+    walletType,
+  } = useUniversalSwap();
 
   // Balances
   const { balances, getBalance, refetch: refetchBalances } = useBalances(walletAddress);
@@ -81,7 +82,9 @@ export function SwapCard() {
 
   // Determine button state
   const getButtonState = () => {
-    if (!isConnected) return { text: "Connect Wallet", disabled: false, action: handleLogin };
+    if (!isConnected) {
+      return { text: "Connect Wallet", disabled: false, action: () => {} };
+    }
     if (!amountIn || parseFloat(amountIn) <= 0) return { text: "Enter Amount", disabled: true };
     
     const balance = parseFloat(getBalance(tokenIn.symbol));
@@ -103,13 +106,27 @@ export function SwapCard() {
   return (
     <div className="swap-card">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">Swap</h2>
-        {wsConnected && (
-          <div className="flex items-center gap-2 text-xs text-green-400">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            Live
-          </div>
-        )}
+        <div>
+          <h2 className="text-xl font-bold">Swap</h2>
+          {isConnected && (
+            <p className="text-xs text-gray-500 mt-1">
+              {walletType === 'standard' ? '🌊 Browser Wallet' : '🔐 Turnkey Wallet'}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {isConnected && walletType && (
+            <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-400">
+              {walletType === 'standard' ? '🌊 Browser Wallet' : '🔐 Turnkey'}
+            </div>
+          )}
+          {wsConnected && (
+            <div className="flex items-center gap-2 text-xs text-green-400">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+              Live
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Token In */}
@@ -189,15 +206,25 @@ export function SwapCard() {
         </div>
       )}
 
-      {/* Swap Button */}
-      <button
-        onClick={buttonState.action}
-        disabled={buttonState.disabled}
-        className="swap-btn"
-      >
-        {loading && <span className="mr-2">⏳</span>}
-        {buttonState.text}
-      </button>
+      {/* Swap Button / Connect Button */}
+      {!isConnected ? (
+        // Browser wallet connect button
+        <div className="mt-6">
+          <ConnectButton 
+            connectText="Connect Wallet to Swap"
+          />
+        </div>
+      ) : (
+        // Swap button (when connected)
+        <button
+          onClick={buttonState.action}
+          disabled={buttonState.disabled}
+          className="swap-btn"
+        >
+          {loading && <span className="mr-2">⏳</span>}
+          {buttonState.text}
+        </button>
+      )}
 
       {/* Success Message */}
       {showSuccess && txDigest && (

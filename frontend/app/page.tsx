@@ -1,10 +1,16 @@
+'use client';
+
+import { useState } from 'react';
 import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ArrowRightIcon, DocsIcon } from "@/components/icons/HeroIcons";
 import { Features } from "@/components/home/Features";
+import { WalletSelector } from "@/components/wallet/WalletSelector";
 
 export default function Home() {
+  const [showWalletSelector, setShowWalletSelector] = useState(false);
+
   return (
     <>
       <Header />
@@ -56,8 +62,11 @@ export default function Home() {
 
           {/* Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-5">
-              <button className="group flex items-center gap-3 px-8 py-4 bg-sui-blue text-white rounded-full text-lg font-bold hover:bg-blue-500 transition-all shadow-[0_0_40px_rgba(77,162,255,0.4)] hover:scale-105">
-                  Start Trading
+              <button 
+                onClick={() => setShowWalletSelector(true)}
+                className="group flex items-center gap-3 px-8 py-4 bg-sui-blue text-white rounded-full text-lg font-bold hover:bg-blue-500 transition-all shadow-[0_0_40px_rgba(77,162,255,0.4)] hover:scale-105"
+              >
+                  Get Started
                   <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </button>
 
@@ -75,6 +84,11 @@ export default function Home() {
 
       {/* 3. FOOTER */}
       <Footer />
+
+      {/* Wallet Selector Modal */}
+      {showWalletSelector && (
+        <WalletSelector onClose={() => setShowWalletSelector(false)} />
+      )}
 
     </main>
     </>

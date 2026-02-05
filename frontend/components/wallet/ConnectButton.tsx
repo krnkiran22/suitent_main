@@ -1,33 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@/hooks/useWallet";
+import { 
+  ConnectButton as DappKitConnectButton, 
+  useCurrentAccount,
+  useDisconnectWallet 
+} from "@mysten/dapp-kit";
 import { formatAddress } from "@/lib/utils/format";
-import { AuthState } from "@turnkey/react-wallet-kit";
 import { WalletDropdown } from "./WalletDropdown";
 
 export function ConnectButton() {
-  const { handleLogin, logout, authState, address } = useWallet();
+  const currentAccount = useCurrentAccount();
+  const { mutate: disconnect } = useDisconnectWallet();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const isConnected = authState === AuthState.Authenticated && address;
-
-  if (isConnected) {
+  if (currentAccount) {
     return (
       <div className="relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full font-medium text-sm transition-all border border-white/10"
         >
-          {formatAddress(address, 4)}
+          {formatAddress(currentAccount.address, 4)}
         </button>
 
         {isDropdownOpen && (
           <WalletDropdown
-            address={address}
+            address={currentAccount.address}
             onClose={() => setIsDropdownOpen(false)}
             onDisconnect={() => {
-              logout();
+              disconnect();
               setIsDropdownOpen(false);
             }}
           />
@@ -37,11 +39,8 @@ export function ConnectButton() {
   }
 
   return (
-    <button
-      onClick={() => handleLogin()}
-      className="bg-sui-blue hover:bg-blue-500 text-white px-6 py-2.5 rounded-full font-medium text-sm transition-all shadow-[0_0_15px_rgba(77,162,255,0.4)] hover:shadow-[0_0_25px_rgba(77,162,255,0.6)]"
-    >
-      Get Started
-    </button>
+    <div className="[&_button]:bg-sui-blue [&_button]:hover:bg-blue-500 [&_button]:text-white [&_button]:px-6 [&_button]:py-2.5 [&_button]:rounded-full [&_button]:font-medium [&_button]:text-sm [&_button]:transition-all [&_button]:shadow-[0_0_15px_rgba(77,162,255,0.4)] hover:[&_button]:shadow-[0_0_25px_rgba(77,162,255,0.6)]">
+      <DappKitConnectButton connectText="Connect Wallet" />
+    </div>
   );
 }

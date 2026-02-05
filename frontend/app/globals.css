@@ -167,3 +167,18 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Wallet Selector Modal - Style ConnectButton from dapp-kit */
+[data-dapp-kit] button {
+  width: 100% !important;
+  padding: 12px 24px !important;
+  background: linear-gradient(to right, #06b6d4, #2563eb) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  transition: transform 0.2s !important;
+}
+
+[data-dapp-kit] button:hover {
+  transform: scale(1.05) !important;
+}

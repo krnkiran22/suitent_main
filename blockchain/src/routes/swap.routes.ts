@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { deepBookService } from "../services/deepbook.service.js";
+import { manualSwapService } from "../services/manual-swap.service.js";
 import { suiService } from "../services/sui.service.js";
 import { poolService } from "../services/pool.service.js";
 import { SwapBuildRequest } from "../types/index.js";
@@ -46,11 +46,11 @@ router.post("/build", async (req: Request, res: Response) => {
     const { walletAddress, tokenIn, tokenOut, amountIn, minAmountOut } = req.body as SwapBuildRequest;
 
     // Validate required fields
-    if (!walletAddress || !tokenIn || !tokenOut || !amountIn || !minAmountOut) {
+    if (!walletAddress || !tokenIn || !tokenOut || !amountIn) {
       console.error("[BuildRoute] Missing required fields");
       return res.status(400).json({
         error: {
-          message: "Missing required fields: walletAddress, tokenIn, tokenOut, amountIn, minAmountOut",
+          message: "Missing required fields: walletAddress, tokenIn, tokenOut, amountIn",
           code: "INVALID_REQUEST",
         },
       });
@@ -66,15 +66,53 @@ router.post("/build", async (req: Request, res: Response) => {
       });
     }
 
-    const result = await deepBookService.buildSwapTransaction({
-      walletAddress,
-      tokenIn: tokenIn.toUpperCase(),
-      tokenOut: tokenOut.toUpperCase(),
-      amountIn,
-      minAmountOut,
-    });
+    let result;
+    const tokenInUpper = tokenIn.toUpperCase();
+    const tokenOutUpper = tokenOut.toUpperCase();
 
-    res.json(result);
+    // Route to appropriate swap function based on token pair
+    if (tokenInUpper === 'SUI' && tokenOutUpper === 'DEEP') {
+      // SUI → DEEP (whitelisted pool) - MANUAL MOVE CALL
+      console.log('[BuildRoute] Building SUI → DEEP swap (MANUAL - SDK BROKEN)');
+      result = await manualSwapService.buildSuiToDeepSwap({
+        walletAddress,
+        amountSui: amountIn,
+        minDeepOut: minAmountOut || '0',
+      });
+    } else if (tokenInUpper === 'DEEP' && tokenOutUpper === 'SUI') {
+      // DEEP → SUI (whitelisted pool) - MANUAL MOVE CALL
+      console.log('[BuildRoute] Building DEEP → SUI swap (MANUAL - SDK BROKEN)');
+      result = await manualSwapService.buildDeepToSuiSwap({
+        walletAddress,
+        amountDeep: amountIn,
+        minSuiOut: minAmountOut || '0',
+      });
+    } else if (tokenInUpper === 'SUI' && tokenOutUpper === 'DBUSDC') {
+      // SUI → DBUSDC (needs DEEP for fees) - MANUAL MOVE CALL
+      console.log('[BuildRoute] Building SUI → DBUSDC swap (MANUAL - SDK BROKEN)');
+      result = await manualSwapService.buildSuiToDbUsdcSwap({
+        walletAddress,
+        amountSui: amountIn,
+        minDbUsdcOut: minAmountOut || '0',
+        deepAmount: '1', // Need DEEP for fees
+      });
+    } else {
+      console.error(`[BuildRoute] Unsupported swap pair: ${tokenInUpper} → ${tokenOutUpper}`);
+      return res.status(400).json({
+        error: {
+          message: `Unsupported swap pair: ${tokenInUpper} → ${tokenOutUpper}`,
+          code: "UNSUPPORTED_PAIR",
+          supportedPairs: ['SUI→DEEP', 'DEEP→SUI', 'SUI→DBUSDC'],
+        },
+      });
+    }
+
+    console.log('[BuildRoute] Transaction built successfully');
+    res.json({
+      transaction: {
+        txBytes: result.txBytes,
+      },
+    });
   } catch (error) {
     throw error;
   }
