@@ -7,7 +7,7 @@ import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useTurnkey } from "@turnkey/react-wallet-kit";
 import { useUniversalSwap } from "@/hooks/useUniversalSwap";
 import { useBalances } from "@/hooks/useBalances";
-import { useWebSocketQuote } from "@/hooks/useWebSocketQuote";
+import { useDeepBookQuote } from "@/hooks/useDeepBookQuote";
 import { getAllTokens, Token } from "@/lib/tokens";
 import { TokenSelector } from "@/components/swap/TokenSelector";
 import { TransactionLimitModal } from "@/components/wallet/TransactionLimitModal";
@@ -48,19 +48,19 @@ export default function SwapPage() {
   console.log('[SwapPage] tokenIn balance:', getBalance(tokenIn.symbol));
   console.log('[SwapPage] tokenOut balance:', getBalance(tokenOut.symbol));
 
-  // Real-time quote via WebSocket
+  // Real-time quote from DeepBook
   const {
-    quote: wsQuote,
-    loading: wsLoading,
-    error: wsError,
-    connected: wsConnected,
-  } = useWebSocketQuote(tokenIn.symbol, tokenOut.symbol, amountIn);
+    quote,
+    loading: quoteLoading,
+    error: quoteError,
+  } = useDeepBookQuote(tokenIn.symbol, tokenOut.symbol, amountIn);
 
   // Handle swap direction toggle
   const handleSwapDirection = useCallback(() => {
+    const tempToken = tokenIn;
     setTokenIn(tokenOut);
-    setTokenOut(tokenIn);
-    setAmountIn("");
+    setTokenOut(tempToken);
+    // Keep the amount - quote will update automatically
     reset();
   }, [tokenIn, tokenOut, reset]);
 
@@ -170,9 +170,9 @@ export default function SwapPage() {
             <div className="relative h-2 z-10 flex items-center justify-center">
                 <button 
                   onClick={handleSwapDirection}
-                  className="bg-[#0a0a0f] p-2 rounded-xl border-4 border-[#0a0a0f] text-sui-blue hover:text-white hover:bg-sui-blue hover:scale-110 transition-all shadow-xl"
+                  className="bg-[#0a0a0f] p-3 rounded-full border-4 border-[#0a0a0f] text-sui-blue hover:text-white hover:bg-sui-blue hover:scale-110 hover:rotate-180 transition-all duration-300 shadow-xl group"
                 >
-                    <ArrowDown className="w-5 h-5" strokeWidth={3} />
+                    <ArrowDown className="w-5 h-5 transition-transform duration-300" strokeWidth={3} />
                 </button>
             </div>
 
@@ -190,10 +190,10 @@ export default function SwapPage() {
                 <div className="flex items-center justify-between gap-4">
                     {/* Amount Output (Read Only) */}
                     <div className="text-4xl font-semibold text-white">
-                      {wsLoading ? (
+                      {quoteLoading ? (
                         <span className="text-white/40">...</span>
-                      ) : wsQuote?.estimatedAmountOut ? (
-                        wsQuote.estimatedAmountOut
+                      ) : quote?.estimatedAmountOut ? (
+                        quote.estimatedAmountOut
                       ) : (
                         <span className="text-white/40">~</span>
                       )}
@@ -207,6 +207,49 @@ export default function SwapPage() {
                     />
                 </div>
             </div>
+
+            {/* QUOTE DETAILS */}
+            {amountIn && parseFloat(amountIn) > 0 && quote && (
+              <div className="bg-slush-card rounded-[20px] p-4 border border-slush-border space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-slush-text text-sm">Rate</span>
+                  <span className="text-white text-sm font-semibold">
+                    1 {tokenIn.symbol} ≈ {quote.pricePerToken} {tokenOut.symbol}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slush-text text-sm">Price Impact</span>
+                  <span className={`text-sm font-semibold ${
+                    parseFloat(quote.priceImpact) > 5 
+                      ? 'text-red-400' 
+                      : parseFloat(quote.priceImpact) > 2
+                      ? 'text-yellow-400'
+                      : 'text-green-400'
+                  }`}>
+                    {quote.priceImpact}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slush-text text-sm">Pool</span>
+                  <span className="text-white/60 text-xs font-mono">
+                    {quote.poolId?.slice(0, 8)}...{quote.poolId?.slice(-6)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Loading Quote */}
+            {amountIn && parseFloat(amountIn) > 0 && quoteLoading && !quote && (
+              <div className="bg-slush-card rounded-[20px] p-4 border border-slush-border">
+                <div className="flex items-center justify-center gap-2 text-slush-text text-sm">
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Fetching best quote...
+                </div>
+              </div>
+            )}
 
             {/* Error Display */}
             {swapError && (
