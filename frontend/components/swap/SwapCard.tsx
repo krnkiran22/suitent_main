@@ -8,6 +8,7 @@ import { useSwap } from "@/hooks/useSwap";
 import { useBalances } from "@/hooks/useBalances";
 import { useWebSocketQuote } from "@/hooks/useWebSocketQuote";
 import { getAllTokens, Token } from "@/lib/tokens";
+import { TokenSelector } from "./TokenSelector";
 
 export function SwapCard() {
   // Turnkey wallet
@@ -17,7 +18,7 @@ export function SwapCard() {
 
   // Form state
   const [tokenIn, setTokenIn] = useState<Token>(getAllTokens()[0]); // SUI
-  const [tokenOut, setTokenOut] = useState<Token>(getAllTokens()[1]); // USDC
+  const [tokenOut, setTokenOut] = useState<Token>(getAllTokens()[1]); // DEEP (was USDC/DBUSDC)
   const [amountIn, setAmountIn] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -123,10 +124,11 @@ export function SwapCard() {
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="token-selector">
-            <img src={tokenIn.iconUrl} alt={tokenIn.symbol} className="w-6 h-6 rounded-full" />
-            <span className="font-medium">{tokenIn.symbol}</span>
-          </div>
+          <TokenSelector
+            selectedToken={tokenIn}
+            onSelectToken={setTokenIn}
+            excludeToken={tokenOut}
+          />
           <input
             type="number"
             value={amountIn}
@@ -151,10 +153,11 @@ export function SwapCard() {
           <span>Balance: {getBalance(tokenOut.symbol)} {tokenOut.symbol}</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="token-selector">
-            <img src={tokenOut.iconUrl} alt={tokenOut.symbol} className="w-6 h-6 rounded-full" />
-            <span className="font-medium">{tokenOut.symbol}</span>
-          </div>
+          <TokenSelector
+            selectedToken={tokenOut}
+            onSelectToken={setTokenOut}
+            excludeToken={tokenIn}
+          />
           <input
             type="text"
             value={wsQuote?.estimatedAmountOut || ""}

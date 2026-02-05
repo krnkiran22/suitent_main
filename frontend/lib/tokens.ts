@@ -17,11 +17,11 @@ export const TOKENS: Record<string, Token> = {
     coinType: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
     iconUrl: "https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg",
   },
-  USDC: {
-    symbol: "USDC",
-    name: "USD Coin",
+  DEEP: {
+    symbol: "DEEP",
+    name: "Deepbook Token",
     decimals: 6,
-    coinType: "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC",
+    coinType: "0x36dbef866a1d62bf7328989a10fb2f07d769f4ee587c0de4a0a256e57e0a58a8::deep::DEEP",
     iconUrl: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
   },
   DBUSDC: {
@@ -29,13 +29,6 @@ export const TOKENS: Record<string, Token> = {
     name: "Deepbook USDC",
     decimals: 6,
     coinType: "0xf7152c05930480cd740d7311b5b8b45c6f488e3a53a11c3f74a6fac36a52e0d7::DBUSDC::DBUSDC",
-    iconUrl: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
-  },
-  DEEP: {
-    symbol: "DEEP",
-    name: "Deepbook Token",
-    decimals: 6,
-    coinType: "0x36dbef866a1d62bf7328989a10fb2f07d769f4ee587c0de4a0a256e57e0a58a8::deep::DEEP",
     iconUrl: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
   },
   DBUSDT: {
