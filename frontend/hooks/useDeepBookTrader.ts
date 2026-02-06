@@ -163,6 +163,16 @@ class DeepBookTrader {
     return tx;
   }
 
+  // Create DEEP deposit transaction
+  createDepositDeepTransaction(amount: number) {
+    return this.createDepositTransaction(amount, 'DEEP');
+  }
+
+  // Create SUI deposit transaction
+  createDepositSuiTransaction(amount: number) {
+    return this.createDepositTransaction(amount, 'SUI');
+  }
+
   // Create market buy order transaction (Buy DEEP with SUI)
   createMarketBuyOrderTransaction(quantitySui: number, clientOrderId: string = Date.now().toString()) {
     const tx = new Transaction();
@@ -484,14 +494,167 @@ export function useDeepBookTrader(walletAddress?: string, walletType?: 'standard
     return trader.checkManagerBalance(coinType);
   }, [trader, isInitialized]);
 
+  // Generic deposit function for any token type
+  const depositToken = useCallback(async (amount: number, tokenType: 'DEEP' | 'SUI') => {
+    if (!trader || !isInitialized) throw new Error('Trader not initialized or balance manager not created');
+
+    return new Promise((resolve, reject) => {
+      let tx;
+      
+      if (tokenType === 'DEEP') {
+        tx = trader.createDepositDeepTransaction(amount);
+      } else if (tokenType === 'SUI') {
+        tx = trader.createDepositSuiTransaction(amount);
+      } else {
+        reject(new Error(`Unsupported token type: ${tokenType}`));
+        return;
+      }
+
+      if (walletType === 'standard') {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              console.log(`[useDeepBookTrader] ${tokenType} deposited:`, result);
+              resolve(result);
+            },
+            onError: (error) => {
+              console.error(`[useDeepBookTrader] Failed to deposit ${tokenType}:`, error);
+              reject(error);
+            }
+          }
+        );
+      } else {
+        reject(new Error('Turnkey signing not implemented yet'));
+      }
+    });
+  }, [trader, isInitialized, walletType, signAndExecute]);
+
+  // Market buy order (buy DEEP with SUI at market price)
+  const placeMarketBuyOrder = useCallback(async (suiAmount: number) => {
+    if (!trader || !isInitialized) throw new Error('Trader not initialized or balance manager not created');
+
+    return new Promise((resolve, reject) => {
+      const clientOrderId = Date.now().toString();
+      const tx = trader.createMarketBuyOrderTransaction(suiAmount, clientOrderId);
+
+      if (walletType === 'standard') {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              console.log('[useDeepBookTrader] Market buy order executed:', result);
+              resolve(result);
+            },
+            onError: (error) => {
+              console.error('[useDeepBookTrader] Failed to execute market buy order:', error);
+              reject(error);
+            }
+          }
+        );
+      } else {
+        reject(new Error('Turnkey signing not implemented yet'));
+      }
+    });
+  }, [trader, isInitialized, walletType, signAndExecute]);
+
+  // Market sell order (sell DEEP for SUI at market price)
+  const placeMarketSellOrder = useCallback(async (deepAmount: number) => {
+    if (!trader || !isInitialized) throw new Error('Trader not initialized or balance manager not created');
+
+    return new Promise((resolve, reject) => {
+      const clientOrderId = Date.now().toString();
+      const tx = trader.createMarketSellOrderTransaction(deepAmount, clientOrderId);
+
+      if (walletType === 'standard') {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              console.log('[useDeepBookTrader] Market sell order executed:', result);
+              resolve(result);
+            },
+            onError: (error) => {
+              console.error('[useDeepBookTrader] Failed to execute market sell order:', error);
+              reject(error);
+            }
+          }
+        );
+      } else {
+        reject(new Error('Turnkey signing not implemented yet'));
+      }
+    });
+  }, [trader, isInitialized, walletType, signAndExecute]);
+
+  // Limit buy order (buy DEEP with SUI at specific price)
+  const placeLimitBuyOrder = useCallback(async (deepQuantity: number, pricePerDeep: number) => {
+    if (!trader || !isInitialized) throw new Error('Trader not initialized or balance manager not created');
+
+    return new Promise((resolve, reject) => {
+      const clientOrderId = Date.now().toString();
+      const tx = trader.createLimitBuyOrderTransaction(deepQuantity, pricePerDeep, clientOrderId);
+
+      if (walletType === 'standard') {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              console.log('[useDeepBookTrader] Limit buy order executed:', result);
+              resolve(result);
+            },
+            onError: (error) => {
+              console.error('[useDeepBookTrader] Failed to execute limit buy order:', error);
+              reject(error);
+            }
+          }
+        );
+      } else {
+        reject(new Error('Turnkey signing not implemented yet'));
+      }
+    });
+  }, [trader, isInitialized, walletType, signAndExecute]);
+
+  // Limit sell order (sell DEEP for SUI at specific price)
+  const placeLimitSellOrder = useCallback(async (deepQuantity: number, pricePerDeep: number) => {
+    if (!trader || !isInitialized) throw new Error('Trader not initialized or balance manager not created');
+
+    return new Promise((resolve, reject) => {
+      const clientOrderId = Date.now().toString();
+      const tx = trader.createLimitSellOrderTransaction(deepQuantity, pricePerDeep, clientOrderId);
+
+      if (walletType === 'standard') {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              console.log('[useDeepBookTrader] Limit sell order executed:', result);
+              resolve(result);
+            },
+            onError: (error) => {
+              console.error('[useDeepBookTrader] Failed to execute limit sell order:', error);
+              reject(error);
+            }
+          }
+        );
+      } else {
+        reject(new Error('Turnkey signing not implemented yet'));
+      }
+    });
+  }, [trader, isInitialized, walletType, signAndExecute]);
+
   return {
     trader,
     isInitialized,
     balanceManagerAddress,
     createBalanceManager,
+    depositToken,
     depositUsdt,
     buySuiWithUsdtMarket,
     sellSuiForUsdtMarket,
+    placeMarketBuyOrder,
+    placeMarketSellOrder,
+    placeLimitBuyOrder,
+    placeLimitSellOrder,
     checkManagerBalance
   };
 }
