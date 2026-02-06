@@ -1,0 +1,30 @@
+(globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
+    script: typeof document === "object" ? document.currentScript : undefined,
+    chunks: [
+  "static/chunks/node_modules_a42ec903._.js",
+  "static/chunks/_f27ac40d._.js",
+  "static/chunks/node_modules_next_ff8cda8f._.js",
+  "static/chunks/node_modules_@turnkey_react-wallet-kit_dist_providers_3afa9422._.js",
+  "static/chunks/node_modules_@turnkey_react-wallet-kit_dist_components_d6cd08fc._.js",
+  "static/chunks/node_modules_@turnkey_react-wallet-kit_dist_bdfe31de._.js",
+  "static/chunks/node_modules_25e34386._.js",
+  "static/chunks/0d613_@noble_curves_esm_0c9853d4._.js",
+  "static/chunks/node_modules_@peculiar_asn1-x509_build_es2015_5f187846._.js",
+  "static/chunks/node_modules_@peculiar_asn1-cms_build_es2015_55c78ddd._.js",
+  "static/chunks/node_modules_@peculiar_x509_build_x509_es_9561c501.js",
+  "static/chunks/node_modules_@turnkey_core_dist_20f972c6._.js",
+  "static/chunks/node_modules_@turnkey_http_dist_1317ebb2._.js",
+  "static/chunks/node_modules_@fortawesome_free-brands-svg-icons_index_mjs_6070a283._.js",
+  "static/chunks/node_modules_@fortawesome_free-solid-svg-icons_index_mjs_e676fced._.js",
+  "static/chunks/node_modules_@headlessui_react_dist_e4a5ad75._.js",
+  "static/chunks/node_modules_@floating-ui_react_dist_22386cb2._.js",
+  "static/chunks/node_modules_libphonenumber-js_534917cf._.js",
+  "static/chunks/node_modules_@mysten_deepbook-v3_dist_6e863927._.js",
+  "static/chunks/node_modules_axios_lib_99e19c7d._.js",
+  "static/chunks/node_modules_@turnkey_a3c1c043._.js",
+  "static/chunks/node_modules_@peculiar_7cdbd6d5._.js",
+  "static/chunks/node_modules_@fortawesome_32f8d0ae._.js",
+  "static/chunks/node_modules_a0e57596._.js"
+],
+    source: "dynamic"
+});

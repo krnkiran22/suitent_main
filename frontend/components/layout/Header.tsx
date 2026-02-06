@@ -4,7 +4,7 @@ import Image from "next/image";
 import { ConnectButton } from "../wallet/ConnectButton"; 
 
 export function Header() {
-  const navLinks = ["Swap", "Chat", "Portfolio", "Orders", "History"];
+  const navLinks = ["Swap", "Trade", "Chat", "Portfolio", "Orders", "History"];
 
   return (
     // 1. Fixed positioning z-50 ensures it's always on top of the Hero image

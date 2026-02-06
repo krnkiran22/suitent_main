@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///Users/kiran/Desktop/suitent/frontend/app/providers.tsx"],"sourcesContent":["\"use client\";\n\nimport { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';\nimport { QueryClient, QueryClientProvider } from '@tanstack/react-query';\nimport '@mysten/dapp-kit/dist/index.css';\n\n// Query client for React Query\nconst queryClient = new QueryClient();\n\n// Sui network configuration\nconst networks = {\n  testnet: { url: 'https://fullnode.testnet.sui.io:443' },\n};\n\nexport function Providers({ children }: { children: React.ReactNode }) {\n  return (\n    <QueryClientProvider client={queryClient}>\n      <SuiClientProvider networks={networks} defaultNetwork=\"testnet\">\n        <WalletProvider autoConnect>\n          {children}\n        </WalletProvider>\n      </SuiClientProvider>\n    </QueryClientProvider>\n  );\n}\n"],"names":[],"mappings":";;;;;AAEA;AACA;AAAA;AAHA;;;;;AAMA,+BAA+B;AAC/B,MAAM,cAAc,IAAI,4LAAW;AAEnC,4BAA4B;AAC5B,MAAM,WAAW;IACf,SAAS;QAAE,KAAK;IAAsC;AACxD;AAEO,SAAS,UAAU,EAAE,QAAQ,EAAiC;IACnE,qBACE,8OAAC,6MAAmB;QAAC,QAAQ;kBAC3B,cAAA,8OAAC,8KAAiB;YAAC,UAAU;YAAU,gBAAe;sBACpD,cAAA,8OAAC,2KAAc;gBAAC,WAAW;0BACxB;;;;;;;;;;;;;;;;AAKX"}}]
+}

@@ -1,0 +1,1258 @@
+================================================================================
+SUITENT PROJECT - COMPLETE KNOWLEDGE BASE & DEVELOPMENT DIARY
+================================================================================
+
+Project: SuiTent - Sui Blockchain Swap Platform
+Technology Stack: Next.js, Sui SDK, DeepBook V3, Turnkey Wallet, React
+Network: Sui Testnet
+Development Period: January - February 2026
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. PROJECT OVERVIEW
+2. WALLET INTEGRATION
+3. BALANCE FETCHING SYSTEM
+4. SWAP FUNCTIONALITY
+5. DEEPBOOK INTEGRATION
+6. PROBLEMS SOLVED
+7. ARCHITECTURE & CODE PATTERNS
+8. IMPORTANT DISCOVERIES
+9. CONFIGURATION & SETUP
+10. TESTING & DEBUGGING
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+WHAT WE BUILT:
+--------------
+A decentralized token swap platform on Sui blockchain that allows users to:
+- Connect with browser wallets (Sui Wallet, Suiet, Welldone)
+- Connect with Turnkey passkey wallets (no browser extension needed)
+- View real-time token balances
+- Get quotes for token swaps
+- Execute swaps using DeepBook V3 DEX
+- Swap between SUI and DEEP tokens
+
+KEY FEATURES:
+-------------
+1. Dual wallet support (Browser + Turnkey passkey)
+2. Real-time balance fetching from Sui RPC
+3. Quote system using DeepBook indexer
+4. Transaction building on backend, signing on frontend
+5. Slush design system (dark theme)
+6. Transaction limit modal for Turnkey wallets
+
+TECH STACK:
+-----------
+Frontend:
+  - Next.js 16.1.6 (with Turbopack)
+  - React 19
+  - TypeScript
+  - Tailwind CSS
+  - @mysten/sui@2.2.0
+  - @mysten/dapp-kit (browser wallets)
+  - @turnkey/react-wallet-kit (passkey wallets)
+  - @mysten/deepbook-v3@1.0.3
+
+Backend:
+  - Node.js with Express
+  - TypeScript
+  - Sui SDK (@mysten/sui)
+  - DeepBook SDK (@mysten/deepbook-v3)
+
+Network:
+  - Sui Testnet
+  - DeepBook V3 DEX
+
+================================================================================
+2. WALLET INTEGRATION
+================================================================================
+
+WALLET TYPES SUPPORTED:
+-----------------------
+1. Browser Wallets:
+   - Sui Wallet (official)
+   - Suiet Wallet
+   - Welldone Wallet
+   - Uses @mysten/dapp-kit
+
+2. Turnkey Wallet:
+   - Passkey-based (no extension needed)
+   - Uses @turnkey/react-wallet-kit
+   - WebAuthn for authentication
+
+WALLET DETECTION PATTERN:
+-------------------------
+Location: /frontend/hooks/useUniversalSwap.ts
+
+```typescript
+// Get wallet type
+const currentAccount = useCurrentAccount(); // Browser wallets
+const { wallets: turnkeyWallets } = useTurnkey(); // Turnkey wallet
+
+const walletAddress = currentAccount?.address || turnkeyAddress;
+const walletType = currentAccount ? 'standard' : (turnkeyAddress ? 'turnkey' : null);
+```
+
+WALLET CONNECTION UI:
+---------------------
+Location: /frontend/components/wallet/WalletSelector.tsx
+
+Problem Solved:
+- Modal was appearing at top of page instead of centered
+- Modal was rendering inside navbar
+
+Solution:
+1. Used React Portal to render outside normal DOM hierarchy
+2. Used CSS Grid with place-items-center for perfect centering
+3. Added z-index: 9999 to appear above navbar
+
+```typescript
+return createPortal(
+  <div className="fixed inset-0 z-[9999] grid place-items-center p-4">
+    {/* Modal content */}
+  </div>,
+  document.body
+);
+```
+
+WALLET DROPDOWN:
+----------------
+Location: /frontend/components/wallet/WalletDropdown.tsx
+
+Shows:
+- Wallet address (copyable)
+- Token balances
+- Disconnect button
+
+Problem Solved: Address not visible on light background
+Solution: Changed to bg-white/90 with text-gray-900
+
+TURNKEY ADDRESS NORMALIZATION (CRITICAL):
+-----------------------------------------
+Problem:
+- Turnkey addresses are 42 characters (0x + 40 hex chars)
+- Sui requires 66 characters (0x + 64 hex chars)
+- API calls failed with "Invalid address format"
+
+Solution:
+Location: /frontend/hooks/useBalances.ts, /frontend/hooks/useWalletBalances.ts
+
+```typescript
+function normalizeAddress(address: string): string {
+  if (address.startsWith('0x')) {
+    const hexPart = address.slice(2);
+    if (hexPart.length < 64) {
+      // Pad with zeros to 64 hex characters
+      return '0x' + hexPart.padStart(64, '0');
+    }
+  }
+  return address;
+}
+
+// Example:
+// Input:  0xb33fb30bf11f051526224aa08dd9e6a3bb8e74fd
+// Output: 0x000000000000000000000000b33fb30bf11f051526224aa08dd9e6a3bb8e74fd
+```
+
+This is applied BEFORE all RPC calls to getAllBalances(), getCoins(), etc.
+
+================================================================================
+3. BALANCE FETCHING SYSTEM
+================================================================================
+
+HOW BALANCES ARE FETCHED:
+--------------------------
+Method: Direct RPC calls to Sui fullnode (no backend dependency)
+SDK: @mysten/sui@2.2.0
+
+BALANCE HOOKS:
+--------------
+1. useBalances.ts - For swap interface
+2. useWalletBalances.ts - For wallet dropdown
+
+Both use identical pattern (could be consolidated in future)
+
+BALANCE FETCHING FLOW:
+----------------------
+Location: /frontend/hooks/useBalances.ts
+
+```typescript
+1. Initialize Sui RPC Client:
+   const suiClient = new SuiJsonRpcClient({
+     network: 'testnet',
+     url: getJsonRpcFullnodeUrl('testnet')
+   });
+
+2. Normalize address (CRITICAL for Turnkey):
+   let normalizedAddress = address;
+   if (address.startsWith('0x')) {
+     const hexPart = address.slice(2);
+     if (hexPart.length < 64) {
+       normalizedAddress = '0x' + hexPart.padStart(64, '0');
+     }
+   }
+
+3. Get all balances:
+   const allBalances = await suiClient.getAllBalances({
+     owner: normalizedAddress
+   });
+
+4. For each balance, fetch metadata:
+   const metadata = await suiClient.getCoinMetadata({
+     coinType: balance.coinType
+   });
+
+5. Format balance to human-readable:
+   const formattedBalance = (Number(balance.totalBalance) / Math.pow(10, decimals)).toFixed(4);
+```
+
+BALANCE DATA STRUCTURE:
+-----------------------
+```typescript
+{
+  symbol: string;       // "SUI", "DEEP"
+  balance: string;      // "1.5000" (human-readable)
+  rawBalance: string;   // "1500000000" (in smallest unit)
+  decimals: number;     // 9 for SUI, 6 for DEEP
+  coinType: string;     // Full type: "0x2::sui::SUI"
+  iconUrl: string;      // Token icon URL
+}
+```
+
+TOKEN DECIMALS:
+---------------
+SUI:  9 decimals (1 SUI = 1,000,000,000 MIST)
+DEEP: 6 decimals (1 DEEP = 1,000,000 micro-DEEP)
+
+BALANCE DISPLAY:
+----------------
+Location: /frontend/components/wallet/TokenBalanceList.tsx
+
+Shows list of tokens with:
+- Token icon
+- Token symbol
+- Balance (formatted)
+- Balance in USD (if available)
+
+================================================================================
+4. SWAP FUNCTIONALITY
+================================================================================
+
+SWAP ARCHITECTURE:
+------------------
+Flow: Frontend → Backend → Blockchain
+
+1. Frontend: Get quote from backend
+2. Frontend: User reviews quote
+3. Frontend: Request transaction build from backend
+4. Backend: Build unsigned transaction with DeepBook SDK
+5. Backend: Return transaction bytes (base64)
+6. Frontend: Decode transaction
+7. Frontend: Sign with wallet
+8. Frontend: Execute on Sui network
+
+SWAP HOOK:
+----------
+Location: /frontend/hooks/useUniversalSwap.ts
+
+Supports both wallet types automatically:
+- Browser wallets: Use @mysten/dapp-kit signAndExecuteTransaction
+- Turnkey wallets: Manual signing with passkey + execute
+
+SWAP EXECUTION (Browser Wallet):
+---------------------------------
+```typescript
+const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+
+signAndExecute(
+  { transaction: tx },
+  {
+    onSuccess: (result) => {
+      console.log('Success!', result.digest);
+    },
+    onError: (err) => {
+      console.error('Failed:', err);
+    }
+  }
+);
+```
+
+SWAP EXECUTION (Turnkey Wallet):
+---------------------------------
+```typescript
+// 1. Build transaction bytes
+const grpcClient = new SuiGrpcClient({ network: 'testnet' });
+const builtTx = await tx.build({ client: grpcClient });
+
+// 2. Create digest for signing
+const intentMessage = messageWithIntent('TransactionData', builtTx);
+const digest = blake2b(intentMessage, { dkLen: 32 });
+
+// 3. Sign with Turnkey
+const signResponse = await httpClient.signRawPayload({
+  signWith: turnkeyAddress,
+  payload: bytesToHex(digest),
+  encoding: 'PAYLOAD_ENCODING_HEXADECIMAL',
+  hashFunction: 'HASH_FUNCTION_NOT_APPLICABLE',
+});
+
+// 4. Serialize signature
+const publicKey = new Ed25519PublicKey(Buffer.from(turnkeyPublicKey, 'hex'));
+const signatureBytes = Buffer.from(signResponse.r + signResponse.s, 'hex');
+const serializedSignature = Buffer.concat([
+  Buffer.from([0x00]), // ED25519 flag
+  signatureBytes,
+  publicKey.toRawBytes(),
+]).toString('base64');
+
+// 5. Execute
+const result = await grpcClient.executeTransaction({
+  transaction: builtTx,
+  signature: serializedSignature,
+});
+```
+
+TRANSACTION BUILDING (Frontend):
+---------------------------------
+Location: /frontend/hooks/useUniversalSwap.ts
+
+```typescript
+const tx = new Transaction();
+tx.setSender(walletAddress);
+
+// Split coins for swap
+const amountInMist = Math.floor(parseFloat(amountIn) * Math.pow(10, decimalsIn));
+const coinToSwap = tx.splitCoins(tx.gas, [tx.pure.u64(amountInMist)]);
+
+// DeepBook swap
+const swapParams = {
+  poolKey: 'DEEP_SUI',
+  baseCoin: isBaseToCoin ? coinToSwap : null,
+  quoteCoin: isBaseToCoin ? null : coinToSwap,
+  amount: BigInt(amountInMist),
+  minOut: BigInt(0), // For testing
+  a2b: isBaseToCoin,
+  deepCoin: tx.splitCoins(tx.gas, [tx.pure.u64(0)])
+};
+
+const swapResult = deepBookClient.deepBook.swapExactQuantity(swapParams)(tx);
+tx.transferObjects(swapResult, walletAddress);
+```
+
+SWAP UI:
+--------
+Location: /frontend/app/swap/page.tsx
+
+Features:
+- Token input with balance display
+- MAX button to use full balance (minus 0.01 SUI for gas)
+- Quote display (rate, price impact, pool)
+- Swap direction button (rotates 180°)
+- Real-time quote updates (debounced 500ms)
+- Loading states
+- Error handling
+- Success notification
+
+TRANSACTION LIMIT MODAL:
+------------------------
+Location: /frontend/components/wallet/TransactionLimitModal.tsx
+
+Problem:
+- Initially had "Upgrade to Premium" button
+- Client wanted clean error message only
+
+Solution:
+- Redesigned with just error message
+- Red accent theme
+- Professional appearance
+- No upgrade CTA
+
+Shows when Turnkey wallet attempts swap (simulating limit for demo)
+
+================================================================================
+5. DEEPBOOK INTEGRATION
+================================================================================
+
+WHAT IS DEEPBOOK:
+-----------------
+DeepBook V3 is the native decentralized exchange (DEX) on Sui blockchain
+- Order book based (not AMM)
+- High performance
+- Low fees (whitelisted pools have 0 fees)
+- Provides liquidity for SUI ecosystem
+
+DEEPBOOK SDK USAGE:
+-------------------
+SDK: @mysten/deepbook-v3@1.0.3
+
+INITIALIZATION:
+```typescript
+import { DeepBookClient } from '@mysten/deepbook-v3';
+
+const deepBookClient = new DeepBookClient({
+  address: walletAddress,
+  client: suiClient,  // SuiJsonRpcClient
+  network: 'testnet'
+} as any);
+```
+
+POOL STRUCTURE:
+---------------
+DEEP_SUI Pool:
+- Pool ID: 0x48c95963e9eac37a316b7ae04a0deb761bcdcc2b67912374d6036e7f0e9bae9f
+- Base Token: DEEP
+- Quote Token: SUI
+- Whitelisted: Yes (0 fees)
+
+Swap Directions:
+- SUI → DEEP: Quote to Base (a2b = false)
+- DEEP → SUI: Base to Quote (a2b = true)
+
+QUOTE SYSTEM:
+-------------
+Problem 1: Initially tried WebSocket connection
+Solution: Switched to backend API endpoint
+
+Problem 2: Tried to use DeepBook SDK methods (getBaseQuantityOut, etc.)
+Error: "deepbook.createTestnet is not a function"
+Solution: Those methods don't exist in SDK v1.0.3
+
+Problem 3: Tried direct DeepBook indexer API call from frontend
+Error: CORS issues (browser can't call external APIs)
+Final Solution: Backend fetches from DeepBook indexer
+
+QUOTE FLOW (Current Implementation):
+------------------------------------
+Location: /frontend/hooks/useDeepBookQuote.ts
+
+```typescript
+// Frontend calls backend
+const response = await fetch('http://localhost:3001/api/price/quote', {
+  method: 'POST',
+  body: JSON.stringify({ tokenIn: 'SUI', tokenOut: 'DEEP', amountIn: '1.5' })
+});
+
+// Backend fetches from DeepBook indexer
+const orderbookUrl = 'https://deepbook-indexer.testnet.mystenlabs.com/orderbook/DEEP_SUI';
+const orderbook = await fetch(orderbookUrl).then(r => r.json());
+
+// Calculate mid-price
+const bestBid = Number(orderbook.bids[0][0]);
+const bestAsk = Number(orderbook.asks[0][0]);
+const currentPrice = (bestBid + bestAsk) / 2;
+
+// Compute output
+const estimatedOut = amountInFloat * currentPrice;
+```
+
+BACKEND DEEPBOOK SERVICES:
+--------------------------
+1. deepbook.service.ts - Quote calculation from indexer
+2. deepbook-swap.service.ts - Transaction building with SDK
+
+SWAP EXECUTION WITH DEEPBOOK:
+------------------------------
+Location: /backend/blockchain/src/services/deepbook-swap.service.ts
+
+```typescript
+// Build transaction
+const tx = new Transaction();
+tx.setSender(walletAddress);
+
+// Split coin
+const coinToSwap = tx.splitCoins(tx.gas, [tx.pure.u64(amountInMist)]);
+
+// Call DeepBook
+const swapParams = {
+  poolKey: 'DEEP_SUI',
+  quoteCoin: coinToSwap,  // SUI
+  baseCoin: null,         // Not swapping base
+  amount: BigInt(amountInMist),
+  minOut: BigInt(minOutMist),
+  a2b: false,             // quote → base
+  deepCoin: tx.splitCoins(tx.gas, [tx.pure.u64(0)])  // 0 fees
+};
+
+const swapResult = deepBookClient.deepBook.swapExactQuantity(swapParams)(tx);
+
+// Transfer outputs
+tx.transferObjects(swapResult, walletAddress);
+```
+
+DEEPBOOK INDEXER ENDPOINTS:
+---------------------------
+Base URL: https://deepbook-indexer.testnet.mystenlabs.com
+
+1. Get Pools:
+   GET /get_pools
+   Returns: List of all trading pools
+
+2. Get Orderbook:
+   GET /orderbook/DEEP_SUI?level=2&depth=5
+   Returns: Bids and asks for price calculation
+
+================================================================================
+6. PROBLEMS SOLVED
+================================================================================
+
+PROBLEM 1: Modal Positioning
+-----------------------------
+Issue: WalletSelector popup going to top of page, appearing inside navbar
+
+Root Cause:
+- Modal rendered in normal DOM flow
+- CSS positioning not working correctly
+- z-index conflicts with navbar
+
+Solution:
+1. React Portal to render outside DOM hierarchy
+2. CSS Grid with place-items-center for centering
+3. z-index: 9999 to appear above everything
+
+Files Changed:
+- /frontend/components/wallet/WalletSelector.tsx
+
+Code:
+```typescript
+import { createPortal } from 'react-dom';
+
+return createPortal(
+  <div className="fixed inset-0 z-[9999] grid place-items-center p-4">
+    {/* Backdrop */}
+    <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+    
+    {/* Modal */}
+    <div className="relative ...">
+      {/* Content */}
+    </div>
+  </div>,
+  document.body
+);
+```
+
+PROBLEM 2: Turnkey Balance Not Loading
+---------------------------------------
+Issue: "Failed to load balances" for Turnkey wallet
+
+Root Cause:
+- Turnkey addresses: 42 characters (0x + 40 hex)
+- Sui requires: 66 characters (0x + 64 hex)
+- RPC rejected short addresses
+
+Solution:
+Normalize addresses by padding with zeros
+
+Files Changed:
+- /frontend/hooks/useBalances.ts
+- /frontend/hooks/useWalletBalances.ts
+
+Code:
+```typescript
+let normalizedAddress = address;
+if (address.startsWith('0x')) {
+  const hexPart = address.slice(2);
+  if (hexPart.length < 64) {
+    normalizedAddress = '0x' + hexPart.padStart(64, '0');
+  }
+}
+
+const balances = await suiClient.getAllBalances({
+  owner: normalizedAddress
+});
+```
+
+Test Case:
+- Input:  0xb33fb30bf11f051526224aa08dd9e6a3bb8e74fd
+- Output: 0x000000000000000000000000b33fb30bf11f051526224aa08dd9e6a3bb8e74fd
+- Result: ✅ Balances load successfully
+
+PROBLEM 3: Wallet Address Not Visible
+--------------------------------------
+Issue: Address text not visible in dropdown (white text on light background)
+
+Solution:
+Changed address display styling
+
+Files Changed:
+- /frontend/components/wallet/WalletDropdown.tsx
+
+Code:
+```typescript
+<div className="bg-white/90 px-3 py-2 rounded-lg">
+  <span className="text-gray-900 font-mono text-xs">
+    {formatAddress(address)}
+  </span>
+</div>
+```
+
+PROBLEM 4: Quote System Not Working
+------------------------------------
+Issue: No quotes showing when entering amount
+
+Evolution of solutions:
+
+Attempt 1: WebSocket connection
+- Created WebSocket service
+- Connected to backend
+- Problem: Overcomplicated for simple quote
+
+Attempt 2: DeepBook SDK methods (getBaseQuantityOut)
+- Error: "deepbook.createTestnet is not a function"
+- Problem: Method doesn't exist in SDK version
+
+Attempt 3: Direct DeepBook indexer call from frontend
+- Error: CORS issues
+- Problem: Browser can't call external APIs
+
+Final Solution: Backend API endpoint
+- Frontend calls backend /api/price/quote
+- Backend calls DeepBook indexer
+- Backend calculates and returns quote
+- ✅ Works perfectly
+
+Files Created:
+- /frontend/hooks/useDeepBookQuote.ts
+
+PROBLEM 5: Turnkey Wallet Balances Not in Dropdown
+---------------------------------------------------
+Issue: Turnkey wallet had custom dropdown without balances
+
+Solution:
+Made both wallet types use the same WalletDropdown component
+
+Files Changed:
+- /frontend/components/wallet/ConnectButton.tsx
+
+Before:
+```typescript
+{turnkeyAddress ? (
+  <CustomMinimalDropdown />  // No balances
+) : null}
+```
+
+After:
+```typescript
+{turnkeyAddress ? (
+  <WalletDropdown
+    address={turnkeyAddress}
+    onDisconnect={handleDisconnect}
+  />  // Full balance list
+) : null}
+```
+
+PROBLEM 6: Backend Not Running
+-------------------------------
+Issue: Swap not working, quotes failing
+
+Root Cause:
+- Backend server not started
+- Frontend trying to call http://localhost:3001
+
+Solution:
+```bash
+cd blockchain
+npm run dev
+```
+
+Server starts on port 3001 with all endpoints:
+- GET  /api/health
+- POST /api/price/quote
+- POST /api/swap/build
+- GET  /api/pools
+- WS   /ws/quotes
+
+PROBLEM 7: IndexedDB Error on Turnkey Disconnect
+-------------------------------------------------
+Issue: "Failed to execute 'delete' on 'IDBObjectStore'" when disconnecting
+
+Root Cause:
+- Turnkey SDK cleanup issue
+- Tries to clear IndexedDB storage
+
+Impact: None (just a warning, doesn't affect functionality)
+
+Solution: Ignored (SDK internal cleanup, harmless)
+
+================================================================================
+7. ARCHITECTURE & CODE PATTERNS
+================================================================================
+
+PROJECT STRUCTURE:
+------------------
+```
+suitent/
+├── frontend/                    # Next.js frontend
+│   ├── app/
+│   │   ├── page.tsx            # Home page
+│   │   ├── swap/
+│   │   │   └── page.tsx        # Swap interface
+│   │   └── layout.tsx          # Root layout
+│   ├── components/
+│   │   ├── wallet/
+│   │   │   ├── ConnectButton.tsx
+│   │   │   ├── WalletSelector.tsx
+│   │   │   ├── WalletDropdown.tsx
+│   │   │   ├── TokenBalanceList.tsx
+│   │   │   └── TransactionLimitModal.tsx
+│   │   ├── swap/
+│   │   │   └── TokenSelector.tsx
+│   │   └── layout/
+│   │       └── Header.tsx
+│   ├── hooks/
+│   │   ├── useBalances.ts
+│   │   ├── useWalletBalances.ts
+│   │   ├── useUniversalSwap.ts
+│   │   └── useDeepBookQuote.ts
+│   └── lib/
+│       └── tokens.ts
+├── blockchain/                  # Backend server
+│   ├── src/
+│   │   ├── services/
+│   │   │   ├── sui.service.ts
+│   │   │   ├── deepbook.service.ts
+│   │   │   ├── deepbook-swap.service.ts
+│   │   │   └── pool.service.ts
+│   │   ├── routes/
+│   │   │   ├── price.routes.ts
+│   │   │   └── swap.routes.ts
+│   │   └── index.ts
+│   └── package.json
+└── package.json
+```
+
+DESIGN PATTERNS USED:
+---------------------
+1. React Hooks Pattern
+   - Custom hooks for reusable logic
+   - Separation of concerns
+   - Example: useBalances, useUniversalSwap
+
+2. Portal Pattern
+   - Modals render outside DOM hierarchy
+   - Prevents z-index and positioning issues
+   - Example: WalletSelector
+
+3. Universal Handler Pattern
+   - Single hook handles multiple wallet types
+   - Automatic detection and routing
+   - Example: useUniversalSwap
+
+4. Service Layer Pattern
+   - Backend organized into services
+   - Each service handles specific domain
+   - Example: deepbook.service.ts, sui.service.ts
+
+5. API Route Pattern
+   - Express routes organized by feature
+   - Middleware for error handling
+   - Example: price.routes.ts, swap.routes.ts
+
+SUI CLIENT INITIALIZATION:
+--------------------------
+Frontend:
+```typescript
+import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from '@mysten/sui/jsonRpc';
+
+const suiClient = new SuiJsonRpcClient({
+  network: 'testnet',
+  url: getJsonRpcFullnodeUrl('testnet')
+});
+```
+
+Backend:
+```typescript
+import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+
+const client = new SuiClient({
+  url: getFullnodeUrl('testnet')
+});
+```
+
+TRANSACTION BUILDING PATTERN:
+------------------------------
+```typescript
+// 1. Create transaction
+const tx = new Transaction();
+
+// 2. Set sender
+tx.setSender(walletAddress);
+
+// 3. Split coins
+const coin = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
+
+// 4. Call smart contract or transfer
+tx.transferObjects([coin], recipient);
+
+// 5. Build transaction bytes
+const txBytes = await tx.build({ client });
+
+// 6. Sign and execute
+const result = await signAndExecute({ transaction: tx });
+```
+
+ERROR HANDLING PATTERN:
+-----------------------
+```typescript
+try {
+  const result = await operation();
+  setSuccess(result);
+} catch (err: any) {
+  console.error('[Component] Error:', err);
+  setError(err?.message || 'Operation failed');
+  
+  // User-friendly error messages
+  if (err.message.includes('Insufficient')) {
+    showToast('Not enough balance');
+  } else if (err.message.includes('Slippage')) {
+    showToast('Price moved too much');
+  }
+} finally {
+  setLoading(false);
+}
+```
+
+STATE MANAGEMENT:
+-----------------
+Using React hooks (no Redux/Zustand needed for this scale):
+- useState for local component state
+- useEffect for side effects
+- Custom hooks for shared logic
+- Props for parent-child communication
+
+STYLING APPROACH:
+-----------------
+Tailwind CSS with custom design system:
+- Slush colors (#0D111C, #131825, #1A2133)
+- Consistent border radius (24px)
+- Dark theme throughout
+- Hover states with transitions
+- Responsive design
+
+================================================================================
+8. IMPORTANT DISCOVERIES
+================================================================================
+
+DISCOVERY 1: Address Format Requirements
+-----------------------------------------
+Sui addresses MUST be 66 characters (0x + 64 hex)
+- Standard wallets: Already 66 chars
+- Turnkey wallets: 42 chars → needs padding
+- Padding method: Left-pad with zeros
+
+Impact: Critical for Turnkey integration
+Without this: All RPC calls fail
+
+DISCOVERY 2: DeepBook SDK Limitations
+--------------------------------------
+The @mysten/deepbook-v3 SDK (v1.0.3):
+- NO createTestnet() method
+- NO standalone quote methods
+- Primary use: Building swap transactions
+- Quote data: Must fetch from indexer API
+
+Lesson: Don't rely on SDK docs alone, test methods exist
+
+DISCOVERY 3: CORS and External APIs
+------------------------------------
+Browser security prevents direct calls to external APIs
+- Frontend CANNOT call DeepBook indexer directly
+- Backend acts as proxy
+- Always use backend for external API calls
+
+DISCOVERY 4: React Portal for Modals
+-------------------------------------
+Portals solve modal positioning issues:
+- Render outside parent DOM
+- Avoid CSS inheritance problems
+- No z-index conflicts
+- Clean positioning
+
+Best Practice: All modals should use portals
+
+DISCOVERY 5: Transaction Gas Handling
+--------------------------------------
+When swapping SUI:
+- Need to reserve some SUI for gas
+- If swapping all SUI, transaction fails
+- Solution: MAX button subtracts 0.01 SUI
+
+```typescript
+const handleMax = () => {
+  const balance = getBalance('SUI');
+  if (tokenIn === 'SUI' && parseFloat(balance) > 0.01) {
+    setAmountIn((parseFloat(balance) - 0.01).toFixed(4));
+  } else {
+    setAmountIn(balance);
+  }
+};
+```
+
+DISCOVERY 6: Token Decimals
+----------------------------
+Different tokens have different decimals:
+- SUI: 9 decimals
+- DEEP: 6 decimals
+- Must convert for all calculations
+
+Conversion:
+```typescript
+const rawAmount = humanAmount * Math.pow(10, decimals);
+const humanAmount = rawAmount / Math.pow(10, decimals);
+```
+
+DISCOVERY 7: Pool Base/Quote Structure
+---------------------------------------
+DeepBook pools have direction:
+- DEEP_SUI: DEEP is base, SUI is quote
+- SUI → DEEP: Quote to base (a2b = false)
+- DEEP → SUI: Base to quote (a2b = true)
+
+This affects:
+- Which coin parameter to use (baseCoin vs quoteCoin)
+- Swap direction flag (a2b)
+- Price calculation
+
+DISCOVERY 8: Turnkey Signing Process
+-------------------------------------
+Turnkey uses different signing than browser wallets:
+1. Build transaction bytes
+2. Create intent message
+3. Hash with blake2b
+4. Sign with passkey via httpClient
+5. Serialize signature with public key
+6. Execute transaction
+
+More complex but enables passkey authentication
+
+DISCOVERY 9: DeepBook Fees
+---------------------------
+DEEP_SUI pool is whitelisted:
+- 0 DEEP required for fees
+- Can pass 0 as deepCoin parameter
+- Other pools require DEEP tokens for fees
+
+DISCOVERY 10: Real-time Quote Updates
+--------------------------------------
+Use debouncing for quote updates:
+- Wait 500ms after user stops typing
+- Prevents excessive API calls
+- Better UX (not flashing constantly)
+
+```typescript
+useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    fetchQuote();
+  }, 500);
+  return () => clearTimeout(timeoutId);
+}, [amountIn]);
+```
+
+================================================================================
+9. CONFIGURATION & SETUP
+================================================================================
+
+ENVIRONMENT VARIABLES:
+----------------------
+Frontend (.env.local):
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+```
+
+Backend (.env):
+```env
+SUI_RPC_URL=https://fullnode.testnet.sui.io:443
+DEEPBOOK_INDEXER_URL=https://deepbook-indexer.testnet.mystenlabs.com
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+```
+
+PACKAGE VERSIONS:
+-----------------
+Critical dependencies:
+
+Frontend:
+```json
+{
+  "@mysten/sui": "^2.2.0",
+  "@mysten/dapp-kit": "latest",
+  "@mysten/deepbook-v3": "^1.0.3",
+  "@turnkey/react-wallet-kit": "latest",
+  "next": "16.1.6",
+  "react": "^19.0.0"
+}
+```
+
+Backend:
+```json
+{
+  "@mysten/sui": "^2.2.0",
+  "@mysten/deepbook-v3": "^1.0.3",
+  "express": "^4.18.2",
+  "cors": "^2.8.5",
+  "typescript": "^5.0.0"
+}
+```
+
+WALLET KIT SETUP:
+-----------------
+Location: /frontend/app/layout.tsx
+
+```typescript
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getFullnodeUrl } from '@mysten/sui/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TurnkeyProvider } from '@turnkey/react-wallet-kit';
+
+const queryClient = new QueryClient();
+const networks = {
+  testnet: { url: getFullnodeUrl('testnet') }
+};
+
+<QueryClientProvider client={queryClient}>
+  <SuiClientProvider networks={networks} defaultNetwork="testnet">
+    <WalletProvider autoConnect>
+      <TurnkeyProvider config={{...}}>
+        {children}
+      </TurnkeyProvider>
+    </WalletProvider>
+  </SuiClientProvider>
+</QueryClientProvider>
+```
+
+BACKEND SERVER SETUP:
+---------------------
+Location: /backend/src/index.ts
+
+```typescript
+import express from 'express';
+import cors from 'cors';
+import { priceRoutes } from './routes/price.routes';
+import { swapRoutes } from './routes/swap.routes';
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.use('/api/price', priceRoutes);
+app.use('/api/swap', swapRoutes);
+
+app.listen(3001, () => {
+  console.log('Server running on port 3001');
+});
+```
+
+TAILWIND CONFIG:
+----------------
+Location: /frontend/tailwind.config.ts
+
+```typescript
+export default {
+  content: ['./app/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        'slush-bg': '#0a0a0f',
+        'slush-card': '#131825',
+        'slush-border': '#1e293b',
+        'slush-text': '#94a3b8',
+        'sui-blue': '#4da2ff',
+      },
+    },
+  },
+};
+```
+
+TOKEN CONFIGURATION:
+--------------------
+Location: /frontend/lib/tokens.ts
+
+```typescript
+export const TOKENS = {
+  SUI: {
+    symbol: 'SUI',
+    name: 'Sui',
+    decimals: 9,
+    type: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
+    icon: '/sui-logo.png'
+  },
+  DEEP: {
+    symbol: 'DEEP',
+    name: 'DeepBook',
+    decimals: 6,
+    type: '0x36dbef866a1d62bf7328989a10fb2f07d769f4ee587c0de4a0a256e57e0a58a8::deep::DEEP',
+    icon: '/deep-logo.png'
+  }
+};
+```
+
+================================================================================
+10. TESTING & DEBUGGING
+================================================================================
+
+TEST WALLET ADDRESSES:
+----------------------
+Standard Browser Wallet:
+0xb33fb30bf11f051526224aa08dd9e6a3bb8e74fd65d635b4fb92b3907e5b3f34
+
+Turnkey Wallet (example):
+0xb33fb30bf11f051526224aa08dd9e6a3bb8e74fd
+
+GETTING TESTNET TOKENS:
+-----------------------
+1. Visit: https://faucet.sui.io/
+2. Enter wallet address
+3. Click "Request Tokens"
+4. Receive 10 SUI (testnet)
+
+For DEEP tokens:
+- Must swap SUI → DEEP on platform
+- Or use DeepBook faucet if available
+
+DEBUGGING PATTERNS:
+-------------------
+Always add logs at key points:
+
+```typescript
+console.log('[Component] Starting operation');
+console.log('[Component] Address:', walletAddress);
+console.log('[Component] Amount:', amountIn);
+
+try {
+  const result = await operation();
+  console.log('[Component] Success:', result);
+} catch (err) {
+  console.error('[Component] Error:', err);
+}
+```
+
+Naming convention: [ComponentName] or [HookName]
+
+COMMON DEBUGGING CHECKS:
+------------------------
+1. Is backend running? Check http://localhost:3001/api/health
+2. Is wallet connected? Check walletAddress !== undefined
+3. Is address normalized? Check length === 66
+4. Are decimals correct? SUI=9, DEEP=6
+5. Is transaction building? Check tx object
+6. Is signing working? Check signature format
+
+TESTING SWAP FLOW:
+------------------
+1. Connect wallet
+2. Check balance displays correctly
+3. Enter amount (e.g., "1")
+4. Wait for quote (should appear in ~500ms)
+5. Click "Review Swap"
+6. Sign transaction
+7. Wait for confirmation
+8. Check balance updated
+9. Check transaction on explorer
+
+Transaction Explorer:
+https://testnet.suivision.xyz/
+
+BROWSER CONSOLE CHECKS:
+-----------------------
+Look for these logs:
+```
+[useUniversalSwap] Wallet Type: standard, Address: 0x...
+[SwapPage] walletAddress: 0x...
+[SwapPage] balances: [...]
+[DeepBookQuote] Fetching quote: 1 SUI -> DEEP
+[DeepBookQuote] Quote received: {...}
+[useUniversalSwap] Building transaction on frontend...
+[useUniversalSwap] ✅ Swap successful! Digest: ...
+```
+
+If missing logs, component not rendering or function not called.
+
+ERROR MESSAGES TO CHECK:
+------------------------
+1. "Wallet not connected" → User needs to connect wallet
+2. "Invalid address format" → Address normalization issue
+3. "Insufficient balance" → User needs more tokens
+4. "Failed to fetch quote" → Backend not running or network issue
+5. "Transaction failed" → Gas, slippage, or contract issue
+
+NETWORK TAB CHECKS:
+-------------------
+Check these API calls:
+- POST http://localhost:3001/api/price/quote → Should return 200
+- POST http://localhost:3001/api/swap/build → Should return 200
+- Sui RPC calls → Should return 200
+
+If 500 errors, check backend logs.
+If network errors, check backend is running.
+
+BACKEND LOGS:
+-------------
+Backend shows detailed logs:
+```
+[DeepBookService] Fetching orderbook for DEEP_SUI
+[DeepBookService] Quote calculated: {...}
+[DeepBookSwapService] Building transaction for 0x...
+[DeepBookSwapService] Transaction built successfully
+```
+
+PERFORMANCE CHECKS:
+-------------------
+- Balance fetching: < 2 seconds
+- Quote fetching: < 1 second
+- Transaction building: < 3 seconds
+- Transaction execution: 3-5 seconds
+
+If slower, check network connection or RPC endpoint.
+
+================================================================================
+KEY LEARNINGS & BEST PRACTICES
+================================================================================
+
+1. ALWAYS normalize Turnkey addresses before RPC calls
+2. Use React Portals for ALL modals
+3. Backend should proxy external APIs (CORS)
+4. Debounce user input for API calls (500ms)
+5. Reserve gas when swapping native token (0.01 SUI)
+6. Different tokens have different decimals
+7. DeepBook pools have base/quote direction
+8. Test with both wallet types (browser + Turnkey)
+9. Add comprehensive logging for debugging
+10. Transaction signing differs by wallet type
+
+FUTURE IMPROVEMENTS:
+--------------------
+1. Consolidate useBalances and useWalletBalances hooks
+2. Add price impact calculation (currently hardcoded)
+3. Add slippage tolerance selector
+4. Support more token pairs
+5. Add transaction history
+6. Add loading skeletons
+7. Add toast notifications system
+8. Improve error messages
+9. Add retry logic for failed transactions
+10. Implement proper quote caching
+
+RESOURCES:
+----------
+- Sui Documentation: https://docs.sui.io/
+- DeepBook Docs: https://docs.deepbook.tech/
+- Sui SDK: https://sdk.mystenlabs.com/typescript
+- Turnkey Docs: https://docs.turnkey.com/
+- DeepBook Indexer: https://deepbook-indexer.testnet.mystenlabs.com
+
+================================================================================
+END OF KNOWLEDGE BASE
+================================================================================
+
+Last Updated: February 5, 2026
+Project Status: Active Development
+Network: Sui Testnet
+Version: 1.0.0
+
+This knowledge base documents all development decisions, problems solved,
+and patterns used in the SuiTent project. Use as reference for future
+development or when onboarding new team members.
