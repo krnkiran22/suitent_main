@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"file":"turbopack:///[project]/node_modules/@turnkey/react-wallet-kit/dist/components/design/Lottie/Dynamic.mjs","sources":["file:///Users/kiran/Desktop/suitent/frontend/node_modules/%40turnkey/react-wallet-kit/src/components/design/Lottie/Dynamic.tsx"],"sourcesContent":["unable to read source [project]/node_modules/@turnkey/react-wallet-kit/src/components/design/Lottie/Dynamic.tsx"],"names":["getLottiePlayer","_getLottiePlayer","apply","arguments","_asyncToGenerator","_regenerator","m","_callee","mod","w","_context","n","v","a","Player"],"mappings":";;;;;;AAAA,SAAsBA,eAAeA,GAAA;IAAA,OAAAC,gBAAA,CAAAC,KAAA,CAAA,IAAA,EAAAC,SAAA,CAAA;AAAA;AAGpC,SAAAF,gBAAAA,GAAA;IAAAA,gBAAA,OAAAG,4NAAA,EAAA,WAAA,OAAAC,uNAAA,IAAAC,CAAA,CAHM,SAAAC,OAAAA,GAAA;QAAA,IAAAC,GAAA;QAAA,WAAAH,uNAAA,EAAA,EAAAI,CAAA,CAAA,SAAAC,QAAA,EAAA;YAAA,MAAA,CAAA,CAAA,OAAAA,QAAA,CAAAC,CAAA;gBAAA,KAAA,CAAA;oBAAAD,QAAA,CAAAC,CAAA,GAAA,CAAA;oBAAA,OACa,OAAO,kCAAkC,CAAC;gBAAA,KAAA,CAAA;oBAAtDH,GAAG,GAAAE,QAAA,CAAAE,CAAA;oBAAA,OAAAF,QAAA,CAAAG,CAAA,CAAA,CAAA,EACFL,GAAG,CAACM,MAAM,CAAA;YAAA;QAAA,CAAA,EAAAP,OAAA,CAAA;IAAA,CAClB,CAAA,CAAA;IAAA,OAAAN,gBAAA,CAAAC,KAAA,CAAA,IAAA,EAAAC,SAAA,CAAA;AAAA"}}]
-}
