@@ -715,7 +715,7 @@ function TradePage() {
                             children: "DeepBook Trading"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 120,
+                            lineNumber: 125,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -723,23 +723,23 @@ function TradePage() {
                             children: "Connect your wallet to start trading"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 121,
+                            lineNumber: 126,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 119,
+                    lineNumber: 124,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/trade/page.tsx",
-                lineNumber: 118,
+                lineNumber: 123,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/app/trade/page.tsx",
-            lineNumber: 117,
+            lineNumber: 122,
             columnNumber: 7
         }, this);
     }
@@ -753,7 +753,7 @@ function TradePage() {
                     children: "DeepBook Trading"
                 }, void 0, false, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 131,
+                    lineNumber: 136,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -764,7 +764,7 @@ function TradePage() {
                             children: "Wallet Information"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 135,
+                            lineNumber: 140,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -778,7 +778,7 @@ function TradePage() {
                                             children: "Wallet Type:"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 138,
+                                            lineNumber: 143,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -786,13 +786,13 @@ function TradePage() {
                                             children: walletType || 'Not connected'
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 139,
+                                            lineNumber: 144,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 137,
+                                    lineNumber: 142,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -803,7 +803,7 @@ function TradePage() {
                                             children: "Address:"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 142,
+                                            lineNumber: 147,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -815,13 +815,13 @@ function TradePage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 143,
+                                            lineNumber: 148,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 141,
+                                    lineNumber: 146,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -832,7 +832,7 @@ function TradePage() {
                                             children: "Balance Manager:"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 148,
+                                            lineNumber: 153,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -840,25 +840,25 @@ function TradePage() {
                                             children: isInitialized ? 'Ready' : 'Not Created'
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 149,
+                                            lineNumber: 154,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 147,
+                                    lineNumber: 152,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 136,
+                            lineNumber: 141,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 134,
+                    lineNumber: 139,
                     columnNumber: 9
                 }, this),
                 !isInitialized && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -869,7 +869,7 @@ function TradePage() {
                             children: "Setup Balance Manager"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 159,
+                            lineNumber: 164,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -877,7 +877,7 @@ function TradePage() {
                             children: "Before trading, you need to create a Balance Manager. This is a one-time setup."
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 160,
+                            lineNumber: 165,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -887,13 +887,13 @@ function TradePage() {
                             children: isLoading ? 'Creating...' : 'Create Balance Manager'
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 163,
+                            lineNumber: 168,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 158,
+                    lineNumber: 163,
                     columnNumber: 11
                 }, this),
                 isInitialized && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -904,7 +904,7 @@ function TradePage() {
                             children: "Manager Balances"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 176,
+                            lineNumber: 181,
                             columnNumber: 13
                         }, this),
                         balancesLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -914,12 +914,12 @@ function TradePage() {
                                 children: "Loading balances..."
                             }, void 0, false, {
                                 fileName: "[project]/app/trade/page.tsx",
-                                lineNumber: 179,
+                                lineNumber: 184,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 178,
+                            lineNumber: 183,
                             columnNumber: 15
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "space-y-3",
@@ -931,7 +931,7 @@ function TradePage() {
                                             children: token
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 185,
+                                            lineNumber: 190,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -939,24 +939,24 @@ function TradePage() {
                                             children: balance
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 186,
+                                            lineNumber: 191,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, token, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 184,
+                                    lineNumber: 189,
                                     columnNumber: 19
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 182,
+                            lineNumber: 187,
                             columnNumber: 15
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 175,
+                    lineNumber: 180,
                     columnNumber: 11
                 }, this),
                 isInitialized && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -967,7 +967,7 @@ function TradePage() {
                             children: "Deposit USDT"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 197,
+                            lineNumber: 202,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -975,7 +975,7 @@ function TradePage() {
                             children: "Deposit USDT into your Balance Manager to start trading"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 198,
+                            lineNumber: 203,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -988,7 +988,7 @@ function TradePage() {
                                             children: "Amount (USDT)"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 201,
+                                            lineNumber: 206,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -999,13 +999,13 @@ function TradePage() {
                                             className: "w-full bg-slush-bg border border-slush-border rounded-xl px-4 py-3 text-white placeholder-slush-text focus:outline-none focus:border-sui-blue"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 202,
+                                            lineNumber: 207,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 200,
+                                    lineNumber: 205,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1015,19 +1015,19 @@ function TradePage() {
                                     children: isLoading ? 'Depositing...' : 'Deposit USDT'
                                 }, void 0, false, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 210,
+                                    lineNumber: 215,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 199,
+                            lineNumber: 204,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 196,
+                    lineNumber: 201,
                     columnNumber: 11
                 }, this),
                 isInitialized && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1038,7 +1038,7 @@ function TradePage() {
                             children: "Market Orders"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 224,
+                            lineNumber: 229,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1046,7 +1046,7 @@ function TradePage() {
                             children: "Place market orders to buy or sell SUI using USDT"
                         }, void 0, false, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 225,
+                            lineNumber: 230,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1059,7 +1059,7 @@ function TradePage() {
                                             children: "Quantity (USDT for buy, SUI for sell)"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 229,
+                                            lineNumber: 234,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1070,13 +1070,13 @@ function TradePage() {
                                             className: "w-full bg-slush-bg border border-slush-border rounded-xl px-4 py-3 text-white placeholder-slush-text focus:outline-none focus:border-sui-blue"
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 230,
+                                            lineNumber: 235,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 228,
+                                    lineNumber: 233,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1089,7 +1089,7 @@ function TradePage() {
                                             children: isLoading ? 'Processing...' : 'Buy SUI'
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 240,
+                                            lineNumber: 245,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1099,25 +1099,25 @@ function TradePage() {
                                             children: isLoading ? 'Processing...' : 'Sell SUI'
                                         }, void 0, false, {
                                             fileName: "[project]/app/trade/page.tsx",
-                                            lineNumber: 248,
+                                            lineNumber: 253,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/trade/page.tsx",
-                                    lineNumber: 239,
+                                    lineNumber: 244,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/trade/page.tsx",
-                            lineNumber: 227,
+                            lineNumber: 232,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 223,
+                    lineNumber: 228,
                     columnNumber: 11
                 }, this),
                 error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1127,12 +1127,12 @@ function TradePage() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/app/trade/page.tsx",
-                        lineNumber: 263,
+                        lineNumber: 268,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 262,
+                    lineNumber: 267,
                     columnNumber: 11
                 }, this),
                 success && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1142,23 +1142,23 @@ function TradePage() {
                         children: success
                     }, void 0, false, {
                         fileName: "[project]/app/trade/page.tsx",
-                        lineNumber: 269,
+                        lineNumber: 274,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/trade/page.tsx",
-                    lineNumber: 268,
+                    lineNumber: 273,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/trade/page.tsx",
-            lineNumber: 130,
+            lineNumber: 135,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/trade/page.tsx",
-        lineNumber: 129,
+        lineNumber: 134,
         columnNumber: 5
     }, this);
 }
