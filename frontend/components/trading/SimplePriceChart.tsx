@@ -11,6 +11,14 @@ export default function SimplePriceChart({ symbol, height = 400 }: SimplePriceCh
   const [currentPrice, setCurrentPrice] = useState<number>(0.85);
   const [priceChange, setPriceChange] = useState<number>(2.34);
   const [priceHistory, setPriceHistory] = useState<number[]>([]);
+  
+  // Gaming-style TP/SL levels
+  const entryPrice = 0.85;
+  const takeProfitPrice = 0.9285;
+  const stopLossPrice = 0.765; // 10% below entry
+  
+  // Calculate PnL
+  const pnl = ((currentPrice - entryPrice) / entryPrice) * 100;
 
   useEffect(() => {
     // Generate initial price history
@@ -58,7 +66,7 @@ export default function SimplePriceChart({ symbol, height = 400 }: SimplePriceCh
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       {/* Price Header */}
       <div className="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-700">
         <div className="flex items-center space-x-4">
@@ -93,6 +101,29 @@ export default function SimplePriceChart({ symbol, height = 400 }: SimplePriceCh
                 <stop offset="0%" stopColor="#00ff88" stopOpacity="0.3" />
                 <stop offset="100%" stopColor="#00ff88" stopOpacity="0.1" />
               </linearGradient>
+              
+              {/* Glowing effects for TP/SL lines */}
+              <filter id="tpGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <filter id="slGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <filter id="entryGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
             </defs>
             
             {/* Grid lines */}
@@ -107,6 +138,154 @@ export default function SimplePriceChart({ symbol, height = 400 }: SimplePriceCh
                 strokeWidth="1"
               />
             ))}
+            
+            {/* Risk/Reward Zones */}
+            {(() => {
+              const minPrice = Math.min(...priceHistory);
+              const maxPrice = Math.max(...priceHistory);
+              const priceRange = maxPrice - minPrice || 0.01;
+              
+              // Calculate Y positions
+              const entryY = (height - 120) - ((entryPrice - minPrice) / priceRange) * (height - 120);
+              const tpY = (height - 120) - ((takeProfitPrice - minPrice) / priceRange) * (height - 120);
+              const slY = (height - 120) - ((stopLossPrice - minPrice) / priceRange) * (height - 120);
+              
+              return (
+                <>
+                  {/* Take Profit Zone (green) */}
+                  <rect
+                    x="0"
+                    y={Math.min(tpY, 0)}
+                    width="600"
+                    height={Math.max(entryY - tpY, 0)}
+                    fill="#00FF41"
+                    fillOpacity="0.1"
+                  />
+                  
+                  {/* Stop Loss Zone (red) */}
+                  <rect
+                    x="0"
+                    y={entryY}
+                    width="600"
+                    height={Math.min(slY - entryY, height - 120 - entryY)}
+                    fill="#FF4B4B"
+                    fillOpacity="0.1"
+                  />
+                  
+                  {/* Entry Line (cyan) */}
+                  <line
+                    x1="0"
+                    y1={entryY}
+                    x2="600"
+                    y2={entryY}
+                    stroke="#00D9FF"
+                    strokeWidth="2"
+                    strokeDasharray="5,5"
+                    filter="url(#entryGlow)"
+                    opacity="0.8"
+                  />
+                  
+                  {/* Take Profit Line (neon green) */}
+                  <line
+                    x1="0"
+                    y1={tpY}
+                    x2="600"
+                    y2={tpY}
+                    stroke="#00FF41"
+                    strokeWidth="3"
+                    filter="url(#tpGlow)"
+                  />
+                  
+                  {/* Stop Loss Line (red) */}
+                  <line
+                    x1="0"
+                    y1={slY}
+                    x2="600"
+                    y2={slY}
+                    stroke="#FF4B4B"
+                    strokeWidth="3"
+                    filter="url(#slGlow)"
+                  />
+                  
+                  {/* Labels with target reticles */}
+                  <g>
+                    {/* TP Label */}
+                    <rect
+                      x="10"
+                      y={tpY - 15}
+                      width="80"
+                      height="24"
+                      rx="12"
+                      fill="rgba(0, 0, 0, 0.8)"
+                      stroke="#00FF41"
+                      strokeWidth="1"
+                    />
+                    <circle cx="25" cy={tpY - 3} r="6" fill="none" stroke="#00FF41" strokeWidth="1.5" />
+                    <circle cx="25" cy={tpY - 3} r="2" fill="#00FF41" />
+                    <text
+                      x="35"
+                      y={tpY - 3}
+                      fill="#00FF41"
+                      fontSize="11"
+                      fontWeight="bold"
+                      dominantBaseline="middle"
+                    >
+                      TP {takeProfitPrice.toFixed(4)}
+                    </text>
+                  </g>
+                  
+                  <g>
+                    {/* SL Label */}
+                    <rect
+                      x="10"
+                      y={slY - 15}
+                      width="80"
+                      height="24"
+                      rx="12"
+                      fill="rgba(0, 0, 0, 0.8)"
+                      stroke="#FF4B4B"
+                      strokeWidth="1"
+                    />
+                    <circle cx="25" cy={slY - 3} r="6" fill="none" stroke="#FF4B4B" strokeWidth="1.5" />
+                    <circle cx="25" cy={slY - 3} r="2" fill="#FF4B4B" />
+                    <text
+                      x="35"
+                      y={slY - 3}
+                      fill="#FF4B4B"
+                      fontSize="11"
+                      fontWeight="bold"
+                      dominantBaseline="middle"
+                    >
+                      SL {stopLossPrice.toFixed(4)}
+                    </text>
+                  </g>
+                  
+                  <g>
+                    {/* Entry Label */}
+                    <rect
+                      x="10"
+                      y={entryY - 15}
+                      width="90"
+                      height="24"
+                      rx="12"
+                      fill="rgba(0, 0, 0, 0.8)"
+                      stroke="#00D9FF"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x="25"
+                      y={entryY - 3}
+                      fill="#00D9FF"
+                      fontSize="11"
+                      fontWeight="bold"
+                      dominantBaseline="middle"
+                    >
+                      ENTRY {entryPrice.toFixed(4)}
+                    </text>
+                  </g>
+                </>
+              );
+            })()}
             
             {/* Price line */}
             <path
@@ -124,23 +303,94 @@ export default function SimplePriceChart({ symbol, height = 400 }: SimplePriceCh
             
             {/* Current price dot */}
             {priceHistory.length > 0 && (
-              <circle
-                cx="600"
-                cy={(() => {
-                  const minPrice = Math.min(...priceHistory);
-                  const maxPrice = Math.max(...priceHistory);
-                  const priceRange = maxPrice - minPrice || 0.01;
-                  return (height - 120) - ((currentPrice - minPrice) / priceRange) * (height - 120);
-                })()}
-                r="4"
-                fill="#00ff88"
-                className="animate-pulse"
-              />
+              <>
+                <circle
+                  cx="600"
+                  cy={(() => {
+                    const minPrice = Math.min(...priceHistory);
+                    const maxPrice = Math.max(...priceHistory);
+                    const priceRange = maxPrice - minPrice || 0.01;
+                    return (height - 120) - ((currentPrice - minPrice) / priceRange) * (height - 120);
+                  })()}
+                  r="4"
+                  fill="#00ff88"
+                  className="animate-pulse"
+                />
+                
+                {/* Diamond marker for current price */}
+                <path
+                  d={`M 600,${(() => {
+                    const minPrice = Math.min(...priceHistory);
+                    const maxPrice = Math.max(...priceHistory);
+                    const priceRange = maxPrice - minPrice || 0.01;
+                    const y = (height - 120) - ((currentPrice - minPrice) / priceRange) * (height - 120);
+                    return `${y - 6} L 606,${y} L 600,${y + 6} L 594,${y}`;
+                  })()}} Z`}
+                  fill="#00ff88"
+                  stroke="#003322"
+                  strokeWidth="1"
+                />
+              </>
             )}
           </svg>
         ) : (
           <div className="text-gray-400">Loading chart data...</div>
         )}
+      </div>
+      
+      {/* Active Position HUD Widget */}
+      <div className="absolute top-24 right-6 bg-black/80 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-4 w-64 shadow-2xl">
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-cyan-500/30 pb-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-cyan-400 font-bold text-sm uppercase tracking-wider">Active Position</span>
+            </div>
+          </div>
+          
+          {/* PnL Display */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-xs uppercase">Unrealized PnL</span>
+              <span className={`text-lg font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}%
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-xs">Entry</span>
+              <span className="text-cyan-400 font-mono text-sm">{entryPrice.toFixed(4)}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-xs">Current</span>
+              <span className="text-white font-mono text-sm">{currentPrice.toFixed(4)}</span>
+            </div>
+            
+            <div className="h-px bg-cyan-500/30 my-2"></div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-green-400 text-xs">Take Profit</span>
+              <span className="text-green-400 font-mono text-sm">{takeProfitPrice.toFixed(4)}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-red-400 text-xs">Stop Loss</span>
+              <span className="text-red-400 font-mono text-sm">{stopLossPrice.toFixed(4)}</span>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex space-x-2 pt-2">
+            <button className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50 rounded px-3 py-2 text-xs font-bold uppercase transition-all">
+              Close
+            </button>
+            <button className="flex-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/50 rounded px-3 py-2 text-xs font-bold uppercase transition-all">
+              Edit
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ export const priceService = {
     try {
       // For demo purposes, simulate API call with random price variations
       // Replace this with actual API calls to exchanges like Binance, CoinGecko, etc.
-      const basePrice = 0.7970;
+      const basePrice = 0.8523; // Match the DEEP/SUI price from the interface
       const volatility = (Math.random() - 0.5) * 0.05; // ±2.5% volatility
       const currentPrice = basePrice * (1 + volatility);
       
@@ -28,7 +28,7 @@ export const priceService = {
   // Function to fetch historical price data
   async getHistoricalPrices(pair = 'DEEP/SUI', periods = 100) {
     try {
-      const basePrice = 0.7970;
+      const basePrice = 0.8523; // Match DEEP/SUI interface price
       const now = Date.now();
       const historicalData = [];
       

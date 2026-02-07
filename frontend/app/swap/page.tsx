@@ -21,6 +21,13 @@ export default function SwapPage() {
   // Get all tokens
   const allTokens = getAllTokens();
   
+  // Mock TP/SL state
+  const [mockTPSL, setMockTPSL] = useState<{
+    takeProfit?: { price: number; percentage: number };
+    stopLoss?: { price: number; percentage: number };
+  }>({});
+  const [tpslCommand, setTpslCommand] = useState("");
+   
   // Form state
   const [tokenIn, setTokenIn] = useState<Token>(allTokens[0]); // SUI
   const [tokenOut, setTokenOut] = useState<Token>(allTokens[1]); // DEEP
@@ -375,9 +382,74 @@ export default function SwapPage() {
       
       {/* Trading Chart with TP/SL Levels */}
       <div className="max-w-4xl mx-auto px-6 pb-8">
+        {/* Mock TP/SL Command Interface */}
+        <div className="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
+          <h3 className="text-white font-bold mb-2">🎯 Quick TP/SL Commands</h3>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={tpslCommand}
+              onChange={(e) => setTpslCommand(e.target.value)}
+              placeholder="Type: 'take profit 20%' or 'stop loss 30%'"
+              className="flex-1 px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 outline-none"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  processTpslCommand(tpslCommand);
+                }
+              }}
+            />
+            <button
+              onClick={() => processTpslCommand(tpslCommand)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Set
+            </button>
+            <button
+              onClick={() => setMockTPSL({})}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="flex gap-4 text-sm">
+            <button
+              onClick={() => processTpslCommand('take profit 20%')}
+              className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+            >
+              TP 20%
+            </button>
+            <button
+              onClick={() => processTpslCommand('stop loss 30%')}
+              className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+            >
+              SL 30%
+            </button>
+            <button
+              onClick={() => processTpslCommand('take profit 50%')}
+              className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+            >
+              TP 50%
+            </button>
+          </div>
+          {/* Status Display */}
+          <div className="flex gap-4 mt-2 text-sm">
+            {mockTPSL.takeProfit && (
+              <span className="text-green-400">
+                ✅ TP: ${mockTPSL.takeProfit.price.toFixed(4)} ({mockTPSL.takeProfit.percentage}%)
+              </span>
+            )}
+            {mockTPSL.stopLoss && (
+              <span className="text-red-400">
+                🛑 SL: ${mockTPSL.stopLoss.price.toFixed(4)} ({mockTPSL.stopLoss.percentage}%)
+              </span>
+            )}
+          </div>
+        </div>
         <TradingChart 
           pair={`${tokenOut.symbol}/${tokenIn.symbol}`}
-          currentPrice={quote?.estimatedAmountOut ? parseFloat(quote.estimatedAmountOut) / parseFloat(amountIn || "1") : 0.7970}
+          currentPrice={currentPrice}
+          mockTakeProfit={mockTPSL.takeProfit}
+          mockStopLoss={mockTPSL.stopLoss}
         />
       </div>
       

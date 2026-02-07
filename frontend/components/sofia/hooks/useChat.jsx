@@ -36,7 +36,7 @@ export const ChatProvider = ({ children }) => {
   const [takeProfitLevel, setTakeProfitLevel] = useState(null);
   const [stopLossLevel, setStopLossLevel] = useState(null);
   const processingRef = useRef(false);
-  const [currentPrice, setCurrentPrice] = useState(0.7970); // Default price
+  const [currentPrice, setCurrentPrice] = useState(0.8523); // Default price to match DEEP/SUI
 
   // Function to get current market price
   const getCurrentPrice = useCallback(() => {
@@ -472,17 +472,112 @@ export const ChatProvider = ({ children }) => {
           return;
         }
 
+        console.log("🔍 Raw response:", resp);
+        console.log("🔍 Response type:", resp.type);
+        console.log("🔍 TP/SL data:", resp.tp_sl_data);
+        console.log("🔍 Has tp_sl_data:", !!resp.tp_sl_data);
+        
+        // Check if this is the old format response (when LLM fallback occurs)
+        if (!resp.type && resp.html_response && resp.messages) {
+          console.log("⚠️ Received LLM fallback response, not TP/SL intent");          
+          // Check if the original message was a TP/SL command that wasn't caught by backend
+          const messageLower = message.toLowerCase();
+          const tpslPatterns = [
+            /(?:set|create).*take\s*profit.*?(\d+)\s*%/i,
+            /(?:set|create).*stop\s*loss.*?(\d+)\s*%/i,
+            /take\s*profit.*?(\d+)\s*%/i,
+            /stop\s*loss.*?(\d+)\s*%/i,
+            /tp.*?(\d+)\s*%/i,
+            /sl.*?(\d+)\s*%/i
+          ];
+          
+          for (let pattern of tpslPatterns) {
+            const match = messageLower.match(pattern);
+            if (match) {
+              console.log("🔄 Frontend fallback: Detected TP/SL command:", match);
+              const percentage = match[1];
+              const isTakeProfit = /take\s*profit|tp|profit/i.test(messageLower);
+              const isStopLoss = /stop\s*loss|sl|stop/i.test(messageLower);
+              
+              console.log(`🎯 TP/SL Type Detection: isTakeProfit=${isTakeProfit}, isStopLoss=${isStopLoss}`);
+              
+              // Default to take profit if both or neither
+              const orderType = isStopLoss && !isTakeProfit ? "stop_loss" : "take_profit";
+              console.log(`📊 Final orderType: ${orderType}`);
+              
+              // Create synthetic TP/SL data
+              const currentPrice = getCurrentPrice();
+              console.log(`💰 Current price: ${currentPrice}`);
+              const percentageDecimal = parseFloat(percentage) / 100;
+              const targetPrice = orderType === "take_profit" 
+                ? currentPrice * (1 + percentageDecimal)
+                : currentPrice * (1 - percentageDecimal);
+              
+              console.log(`🎯 Target price calculated: ${targetPrice} (${percentage}% ${orderType === "take_profit" ? "above" : "below"} ${currentPrice})`);
+              
+              if (orderType === "take_profit") {
+                console.log("🟢 Setting Take Profit Level");
+                setTakeProfitLevel({
+                  price: targetPrice,
+                  percentage: percentage,
+                  timestamp: Date.now(),
+                  currentPrice: currentPrice
+                });
+                localStorage.setItem('takeProfitLevel', JSON.stringify({
+                  price: targetPrice,
+                  percentage: percentage,
+                  timestamp: Date.now(),
+                  currentPrice: currentPrice
+                }));
+              } else {
+                console.log("🔴 Setting Stop Loss Level");
+                setStopLossLevel({
+                  price: targetPrice,
+                  percentage: percentage,
+                  timestamp: Date.now(),
+                  currentPrice: currentPrice
+                });
+                localStorage.setItem('stopLossLevel', JSON.stringify({
+                  price: targetPrice,
+                  percentage: percentage,
+                  timestamp: Date.now(),
+                  currentPrice: currentPrice
+                }));
+              }
+              
+              // Add a confirmation message
+              const confirmationMessage = {
+                text: `✅ ${orderType === "take_profit" ? "Take Profit" : "Stop Loss"} set at $${targetPrice.toFixed(4)} (${percentage}% ${orderType === "take_profit" ? "above" : "below"} current price of $${currentPrice.toFixed(4)}). Check the trading chart to see it visualized!`,
+                facialExpression: "smile",
+                animation: "Talking_1",
+                audio: null
+              };
+              
+              setMessages(prev => [...prev, confirmationMessage]);
+              setSuggestions(["View trading chart", "Set another level", "Remove levels"]);
+              setLoading(false);
+              return;
+            }
+          }        }
+        
         // Handle take profit / stop loss intents
         if (resp.type === "tp_sl_intent" && resp.tp_sl_data) {
           console.log("🎯 TP/SL intent detected:", resp.tp_sl_data);
           
           // Get current price from market data or chart component
           const currentPrice = getCurrentPrice();
+          console.log("💰 Current price used:", currentPrice);
           const percentage = parseFloat(resp.tp_sl_data.percentage) / 100;
+          console.log("📊 Percentage:", percentage);
           
           let targetPrice;
           if (resp.tp_sl_data.type === "take_profit") {
             targetPrice = currentPrice * (1 + percentage);
+            console.log("🟢 Setting Take Profit:", {
+              targetPrice,
+              percentage: resp.tp_sl_data.percentage,
+              currentPrice
+            });
             setTakeProfitLevel({
               price: targetPrice,
               percentage: resp.tp_sl_data.percentage,
@@ -491,6 +586,11 @@ export const ChatProvider = ({ children }) => {
             });
           } else {
             targetPrice = currentPrice * (1 - percentage);
+            console.log("🔴 Setting Stop Loss:", {
+              targetPrice,
+              percentage: resp.tp_sl_data.percentage,
+              currentPrice
+            });
             setStopLossLevel({
               price: targetPrice,
               percentage: resp.tp_sl_data.percentage,
@@ -534,6 +634,24 @@ export const ChatProvider = ({ children }) => {
             "Remove levels"
           ]);
           
+          setLoading(false);
+          return;
+        }
+
+        // Handle price check requests
+        if (resp.type === "price_check" && resp.token) {
+          console.log("💰 Price check request for:", resp.token);
+          
+          const currentPrice = getCurrentPrice();
+          const priceMessage = {
+            text: `The current price is $${currentPrice.toFixed(4)}. This data is updated in real-time on your trading chart. Navigate to the /swap page to see the full price chart and set trading levels!`,
+            facialExpression: "thinking",
+            animation: "Talking_2",
+            audio: null
+          };
+          
+          setMessages(prev => [...prev, priceMessage]);
+          setSuggestions(["Go to trading chart", "Set take profit", "Set stop loss"]);
           setLoading(false);
           return;
         }
