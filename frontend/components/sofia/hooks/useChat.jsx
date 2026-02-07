@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-const backendUrl = "http://127.0.0.1:5000/chat";
+const backendUrl = "http://127.0.0.1:5001/chat";
 
 const ChatContext = createContext();
 
