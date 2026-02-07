@@ -1,0 +1,9 @@
+requests
+moralis
+flask
+flask_cors
+langchain_core
+langchain_community
+uuid
+langchain-groq
+duckduckgo-search

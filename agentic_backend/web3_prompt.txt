@@ -1,0 +1,5 @@
+user will stake the tokens to buy the courses ,
+if the user needs to by the course but not having enough money then they will stake 
+when user tell you to stake the tokens then you need to stake the tokens 
+in staking the user can get rewards when the user tell you to get rewards 
+you need to claim the rewards and buy them the course
