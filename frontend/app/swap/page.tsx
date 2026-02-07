@@ -13,6 +13,8 @@ import { TokenSelector } from "@/components/swap/TokenSelector";
 import { TransactionLimitModal } from "@/components/wallet/TransactionLimitModal";
 import { useUniswapSwap, UNISWAP_TOKENS } from "@/hooks/useUniswapSwap";
 import UniswapAnalytics from "@/components/swap/UniswapAnalytics";
+import { useUniswapV4Hooks } from "@/hooks/useUniswapV4Hooks";
+import V4HooksSelector from "@/components/swap/V4HooksSelector";
 
 export default function SwapPage() {
   // Get all tokens
@@ -44,6 +46,18 @@ export default function SwapPage() {
     isServiceReady: isUniswapReady,
     reset: resetUniswap
   } = useUniswapSwap();
+
+  // Uniswap V4 Hooks for advanced DeFi functionality
+  const {
+    getV4Quote,
+    executeV4Swap,
+    availableHooks,
+    selectedHook,
+    switchHook,
+    isServiceReady: isV4Ready,
+    quote: v4Quote,
+    loading: v4Loading
+  } = useUniswapV4Hooks();
 
   // Get wallet address from hook
   const standardAccount = useCurrentAccount();
@@ -119,6 +133,25 @@ export default function SwapPage() {
         const tokenOutAddress = uniswapTokenMap[tokenOut.symbol as keyof typeof uniswapTokenMap];
         
         if (tokenInAddress && tokenOutAddress) {
+          // First try V4 hooks for advanced functionality
+          if (isV4Ready && selectedHook) {
+            console.log('🎣 Attempting Uniswap V4 hooks integration...');
+            const v4Result = await executeV4Swap(
+              tokenIn.symbol, 
+              tokenOut.symbol, 
+              amountIn, 
+              selectedHook, 
+              walletAddress
+            );
+            
+            if (v4Result.success) {
+              console.log('✅ V4 swap with hooks completed successfully');
+              console.log('🎣 Hooks executed:', v4Result.v4Features?.hooksExecuted);
+              console.log('⛽ Gas savings:', v4Result.v4Features?.gasSavings);
+            }
+          }
+          
+          // Fallback to V3 for additional liquidity
           await executeUniswapSwap(tokenInAddress, tokenOutAddress, amountIn, walletAddress);
           console.log('✅ Uniswap swap route calculated successfully');
         }
@@ -287,6 +320,14 @@ export default function SwapPage() {
                 </div>
               </div>
             )}
+
+            {/* Uniswap V4 Hooks Selector - Advanced DeFi Features */}
+            <V4HooksSelector 
+              className="mb-2"
+              onHookSelect={(hookAddress) => {
+                console.log('🎣 V4 Hook selected:', hookAddress);
+              }}
+            />
 
             {/* Error Display */}
             {swapError && (
