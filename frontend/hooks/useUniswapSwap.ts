@@ -192,4 +192,5 @@ export function useUniswapSwap() {
 }
 
 // Export hook and types
+export { UNISWAP_TOKENS };
 export default useUniswapSwap;
