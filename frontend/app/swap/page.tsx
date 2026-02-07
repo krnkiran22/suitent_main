@@ -11,6 +11,8 @@ import { useDeepBookQuote } from "@/hooks/useDeepBookQuote";
 import { getAllTokens, Token } from "@/lib/tokens";
 import { TokenSelector } from "@/components/swap/TokenSelector";
 import { TransactionLimitModal } from "@/components/wallet/TransactionLimitModal";
+import { useUniswapSwap, UNISWAP_TOKENS } from "@/hooks/useUniswapSwap";
+import UniswapAnalytics from "@/components/swap/UniswapAnalytics";
 
 export default function SwapPage() {
   // Get all tokens
@@ -32,6 +34,16 @@ export default function SwapPage() {
     reset,
     walletType,
   } = useUniversalSwap();
+
+  // Uniswap integration for enhanced liquidity routing
+  const {
+    getQuote: getUniswapQuote,
+    executeSwap: executeUniswapSwap,
+    quote: uniswapQuote,
+    loading: uniswapLoading,
+    isServiceReady: isUniswapReady,
+    reset: resetUniswap
+  } = useUniswapSwap();
 
   // Get wallet address from hook
   const standardAccount = useCurrentAccount();
@@ -74,7 +86,7 @@ export default function SwapPage() {
     }
   }, [tokenIn.symbol, getBalance]);
 
-  // Handle swap execution
+  // Handle swap execution with Uniswap fallback
   const handleSwap = async () => {
     // Show transaction limit modal for Turnkey wallets (simulating limit)
     if (walletType === 'turnkey') {
@@ -82,12 +94,37 @@ export default function SwapPage() {
       return;
     }
     
-    const result = await executeSwap(tokenIn.symbol, tokenOut.symbol, amountIn);
-    if (result) {
-      setShowSuccess(true);
-      setAmountIn("");
-      refetchBalances();
-      setTimeout(() => setShowSuccess(false), 5000);
+    try {
+      // Primary swap execution through SuiTent's native system
+      const result = await executeSwap(tokenIn.symbol, tokenOut.symbol, amountIn);
+      
+      if (result) {
+        setShowSuccess(true);
+        setAmountIn("");
+        refetchBalances();
+        setTimeout(() => setShowSuccess(false), 5000);
+      } else if (isUniswapReady) {
+        // Fallback to Uniswap for enhanced liquidity (demonstration purposes)
+        console.log('🔄 Attempting Uniswap fallback for enhanced liquidity...');
+        
+        const uniswapTokenMap = {
+          'USDC': UNISWAP_TOKENS.USDC,
+          'USDT': UNISWAP_TOKENS.USDT,
+          'ETH': UNISWAP_TOKENS.WETH,
+          'WBTC': UNISWAP_TOKENS.WBTC,
+          'DAI': UNISWAP_TOKENS.DAI
+        };
+        
+        const tokenInAddress = uniswapTokenMap[tokenIn.symbol as keyof typeof uniswapTokenMap];
+        const tokenOutAddress = uniswapTokenMap[tokenOut.symbol as keyof typeof uniswapTokenMap];
+        
+        if (tokenInAddress && tokenOutAddress) {
+          await executeUniswapSwap(tokenInAddress, tokenOutAddress, amountIn, walletAddress);
+          console.log('✅ Uniswap swap route calculated successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Swap execution failed:', error);
     }
   };
 
@@ -293,6 +330,12 @@ export default function SwapPage() {
 
         </div>
       </main>
+      
+      {/* Uniswap Analytics - Background price monitoring */}
+      <UniswapAnalytics 
+        tokenSymbol={tokenIn.symbol}
+        showDebugInfo={process.env.NODE_ENV === 'development'}
+      />
       
       {/* Transaction Limit Modal */}
       <TransactionLimitModal 
