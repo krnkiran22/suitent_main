@@ -1,0 +1,143 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --leva-sizes-rootWidth: 340px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #050505;
+  color: white;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Gradient background for the app */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050505 100%);
+  z-index: -1;
+}
+
+body.greenScreen {
+  background-color: #00ff00 !important;
+  background-image: none !important;
+}
+
+body.greenScreen::before {
+  display: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Tailwind custom animations */
+@layer utilities {
+  .animate-in {
+    animation-duration: 500ms;
+    animation-fill-mode: forwards;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .slide-in-from-top-4 {
+    animation-name: slideInFromTop;
+  }
+
+  .slide-in-from-right-4 {
+    animation-name: slideInFromRight;
+  }
+
+  .slide-in-from-bottom-6 {
+    animation-name: slideInFromBottom;
+  }
+
+  .zoom-in {
+    animation-name: zoomIn;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-1rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(1rem); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(1.5rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
