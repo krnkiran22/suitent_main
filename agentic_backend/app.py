@@ -155,16 +155,23 @@ def chat():
                 continue
 
     # --- TAKE PROFIT / STOP LOSS DETECTION ---
-    # Check for TP/SL intents using regex
+    # Check for TP/SL intents using regex with more flexible patterns
     tp_sl_patterns = [
-        r'create.*take\s*profit.*at\s*(\d+)%.*from.*current.*price',
-        r'set.*take\s*profit.*(\d+)%.*from.*current.*price', 
-        r'take\s*profit.*at\s*(\d+)%.*from.*current.*price',
-        r'tp.*at\s*(\d+)%.*from.*current.*price',
-        r'create.*stop\s*loss.*at\s*(\d+)%.*from.*current.*price',
-        r'set.*stop\s*loss.*(\d+)%.*from.*current.*price',
-        r'stop\s*loss.*at\s*(\d+)%.*from.*current.*price', 
-        r'sl.*at\s*(\d+)%.*from.*current.*price'
+        # Take Profit patterns (with optional spaces around %)
+        r'(?:create|set).*take\s*profit.*?at\s*(\d+)\s*%',
+        r'take\s*profit.*?at\s*(\d+)\s*%',
+        r'tp.*?at\s*(\d+)\s*%',
+        r'take\s*profit.*?(\d+)\s*percent',
+        r'set.*?tp.*?(\d+)\s*%',
+        # Stop Loss patterns (with optional spaces around %)
+        r'(?:create|set).*stop\s*loss.*?at\s*(\d+)\s*%',
+        r'stop\s*loss.*?at\s*(\d+)\s*%',
+        r'sl.*?at\s*(\d+)\s*%',
+        r'stop\s*loss.*?(\d+)\s*percent',
+        r'set.*?sl.*?(\d+)\s*%',
+        # More flexible patterns
+        r'(?:take\s*profit|tp).*?(\d+)\s*%.*?(?:current|price)',
+        r'(?:stop\s*loss|sl).*?(\d+)\s*%.*?(?:current|price)'
     ]
     
     for i, pattern in enumerate(tp_sl_patterns):
@@ -175,9 +182,13 @@ def chat():
             try:
                 percentage = match.group(1)
                 
-                # Determine if it's take profit or stop loss
-                is_take_profit = any(keyword in query_lower for keyword in ['take profit', 'tp'])
-                is_stop_loss = any(keyword in query_lower for keyword in ['stop loss', 'sl'])
+                # Determine if it's take profit or stop loss based on keywords
+                is_take_profit = any(keyword in query_lower for keyword in ['take profit', 'tp', 'profit'])
+                is_stop_loss = any(keyword in query_lower for keyword in ['stop loss', 'sl', 'stop'])
+                
+                # Default to take profit if both or neither are detected
+                if not is_stop_loss:
+                    is_take_profit = True
                 
                 order_type = "take_profit" if is_take_profit else "stop_loss"
                 
@@ -198,6 +209,7 @@ def chat():
                 return jsonify(response_data)
             except Exception as e:
                 print(f"Error processing TP/SL match: {e}")
+                continue
                 continue
 
     # --- PRICE CHECK DETECTION ---
