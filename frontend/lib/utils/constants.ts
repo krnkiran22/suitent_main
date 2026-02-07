@@ -10,7 +10,5 @@ export const ROUTES = {
   HOME: "/",
   CHAT: "/chat",
   PORTFOLIO: "/portfolio",
-  ORDERS: "/orders",
-  HISTORY: "/history",
   SETTINGS: "/settings",
 } as const;

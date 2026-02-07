@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PageWrapper } from "@/components/layout/PageWrapper";
-import { Loader } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { motion, useDragControls, useMotionValue, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
@@ -608,7 +607,10 @@ function ChatPageContent() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#050505]">
-      <Loader />
+      {/* Simple loading indicator */}
+      <div className="absolute top-4 right-4 z-50">
+        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+      </div>
 
       {/* Background Layer */}
       {backgroundUrl && (
