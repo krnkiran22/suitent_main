@@ -74,6 +74,14 @@ export default function TradePage() {
     }
   }, [marketData.price, orderType]);
 
+  // Debug DeepBook API when trader is available
+  useEffect(() => {
+    if (trader) {
+      console.log('[TradePage] Debugging DeepBook API:');
+      trader.debugDeepBookMethods();
+    }
+  }, [trader]);
+
   const handleCreateBalanceManager = async () => {
     if (!trader) return;
     setLoading(true);
