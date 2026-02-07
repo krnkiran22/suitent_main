@@ -31,6 +31,7 @@ export const UI = ({ hidden, ...props }) => {
   const [isTrackingSettingsOpen, setIsTrackingSettingsOpen] = useState(false);
   const [isCaptionSettingsOpen, setIsCaptionSettingsOpen] = useState(false);
   const [isApiKeySettingsOpen, setIsApiKeySettingsOpen] = useState(false);
+  const [txCountdown, setTxCountdown] = useState(10);
 
   const {
     chat, loading, cameraZoomed, setCameraZoomed, message,
@@ -42,7 +43,7 @@ export const UI = ({ hidden, ...props }) => {
     isCaptionMoveMode, setIsCaptionMoveMode,
     captionPosition, setCaptionPosition,
     captionWidth, setCaptionWidth,
-    visualAssets, suggestions,
+    visualAssets, suggestions, recentTransaction,
     stopResponse, isPlaying
   } = useChat();
 
@@ -104,6 +105,32 @@ export const UI = ({ hidden, ...props }) => {
       recognition.start();
     } else {
       alert('Speech recognition is not supported in this browser.');
+    }
+  };
+
+  // Handle transaction countdown timer
+  useEffect(() => {
+    let intervalId;
+    if (recentTransaction) {
+      intervalId = setInterval(() => {
+        const timeLeft = Math.max(0, Math.ceil((recentTransaction.timestamp + 10000 - Date.now()) / 1000));
+        setTxCountdown(timeLeft);
+      }, 100);
+    }
+    
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [recentTransaction]);
+
+  // Function to copy transaction hash to clipboard
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
     }
   };
 
@@ -366,6 +393,26 @@ export const UI = ({ hidden, ...props }) => {
                       <div className="flex items-center space-x-1.5 pt-1">
                         <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
                         <span className="text-[8px] text-white/40 font-bold uppercase tracking-widest">Official Reference</span>
+                      </div>
+                    </div>
+                  ) : asset.type === 'link' ? (
+                    <div className="relative flex-grow p-4 bg-gradient-to-br from-blue-900/40 via-cyan-900/40 to-black cursor-pointer flex flex-col justify-center space-y-3"
+                      onClick={() => {
+                        window.open(asset.url, '_blank');
+                      }}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 group-hover:bg-blue-500/40 transition-colors">
+                          <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em]">Transaction</p>
+                          <p className="text-xs font-bold text-white/90 line-clamp-2 mt-0.5 leading-snug">{asset.caption || "View Link"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1.5 pt-1">
+                        <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse"></span>
+                        <span className="text-[8px] text-white/40 font-bold uppercase tracking-widest">Click to Open</span>
                       </div>
                     </div>
                   ) : (
@@ -655,6 +702,66 @@ export const UI = ({ hidden, ...props }) => {
               </div>
             </div>
             <button onClick={() => setIsApiKeySettingsOpen(false)} className="w-full mt-6 py-3 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 text-[10px] font-bold uppercase rounded-xl transition-all">Done</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Transaction Hash Display - Bottom Left Corner */}
+      <AnimatePresence>
+        {recentTransaction && (
+          <motion.div
+            initial={{ opacity: 0, y: 100, x: -100 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: 100, x: -100, transition: { duration: 0.3 } }}
+            className="fixed bottom-6 left-6 pointer-events-auto z-50"
+          >
+            <div className="bg-gradient-to-r from-green-900/90 via-emerald-900/90 to-green-800/90 backdrop-blur-2xl border border-green-500/30 rounded-2xl p-4 shadow-2xl max-w-sm">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center border border-green-500/30 flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <p className="text-xs font-black text-green-400 uppercase tracking-[0.2em]">Swap Success</p>
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                  </div>
+                  <p className="text-sm font-bold text-white mb-2 leading-tight">
+                    {recentTransaction.amount} {recentTransaction.fromToken} → {recentTransaction.toToken}
+                  </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-white/70">Transaction Hash:</p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-xs font-mono text-green-300 break-all">
+                        {recentTransaction.hash.slice(0, 8)}...{recentTransaction.hash.slice(-8)}
+                      </p>
+                      <button
+                        onClick={() => copyToClipboard(recentTransaction.hash)}
+                        className="flex-shrink-0 p-1.5 bg-green-500/20 hover:bg-green-500/40 rounded-lg transition-colors"
+                        title="Copy full hash"
+                      >
+                        <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => window.open(recentTransaction.url, '_blank')}
+                        className="flex-shrink-0 p-1.5 bg-green-500/20 hover:bg-green-500/40 rounded-lg transition-colors"
+                        title="View on SuiScan"
+                      >
+                        <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[10px] text-white/40 uppercase tracking-widest">
+                    Auto-hiding in {txCountdown}s
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

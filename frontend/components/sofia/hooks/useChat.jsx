@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useUniversalSwap } from "@/hooks/useUniversalSwap";
+import { useBalances } from "@/hooks/useBalances";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useTurnkey } from "@turnkey/react-wallet-kit";
 
 const backendUrl = "http://127.0.0.1:5001/chat";
 
@@ -27,7 +31,44 @@ export const ChatProvider = ({ children }) => {
   const [captionWidth, setCaptionWidth] = useState(540);
   const [visualAssets, setVisualAssets] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [pendingSwap, setPendingSwap] = useState(null);
+  const [recentTransaction, setRecentTransaction] = useState(null);
+  const [takeProfitLevel, setTakeProfitLevel] = useState(null);
+  const [stopLossLevel, setStopLossLevel] = useState(null);
   const processingRef = useRef(false);
+  const [currentPrice, setCurrentPrice] = useState(0.7970); // Default price
+
+  // Function to get current market price
+  const getCurrentPrice = useCallback(() => {
+    // Try to get from localStorage first (updated by TradingChart)
+    const storedPrice = localStorage.getItem('currentMarketPrice');
+    if (storedPrice) {
+      const priceData = JSON.parse(storedPrice);
+      // Check if price data is recent (within 1 minute)
+      if (Date.now() - priceData.timestamp < 60000) {
+        return priceData.price;
+      }
+    }
+    // Fallback to current state or default
+    return currentPrice;
+  }, [currentPrice]);
+
+  // Update current price from external sources
+  const updateCurrentPrice = useCallback((price) => {
+    setCurrentPrice(price);
+    localStorage.setItem('currentMarketPrice', JSON.stringify({
+      price: price,
+      timestamp: Date.now()
+    }));
+  }, []);
+
+  // Swap functionality
+  const { executeSwap, loading: swapLoading, error: swapError } = useUniversalSwap();
+  const standardAccount = useCurrentAccount();
+  const { wallets: turnkeyWallets } = useTurnkey();
+  const turnkeyAddress = turnkeyWallets?.[0]?.accounts?.[0]?.address;
+  const walletAddress = standardAccount?.address || turnkeyAddress;
+  const { balances, getBalance, refetch: refetchBalances } = useBalances(walletAddress);
 
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
@@ -71,6 +112,25 @@ export const ChatProvider = ({ children }) => {
       localStorage.setItem('currentConversationId', newId);
     }
 
+    // Load take profit and stop loss levels
+    const storedTakeProfit = localStorage.getItem('takeProfitLevel');
+    if (storedTakeProfit) {
+      try {
+        setTakeProfitLevel(JSON.parse(storedTakeProfit));
+      } catch (e) {
+        console.error("Error parsing stored take profit level:", e);
+      }
+    }
+    
+    const storedStopLoss = localStorage.getItem('stopLossLevel');
+    if (storedStopLoss) {
+      try {
+        setStopLossLevel(JSON.parse(storedStopLoss));
+      } catch (e) {
+        console.error("Error parsing stored stop loss level:", e);
+      }
+    }
+
     setHasLoadedFromStorage(true);
   }, []);
 
@@ -110,9 +170,207 @@ export const ChatProvider = ({ children }) => {
   }, []);
 
   const chat = useCallback(async (message) => {
+    console.log("💬 === CHAT FUNCTION CALLED ===");
+    console.log("📝 Message:", message);
+    console.log("📋 Current pendingSwap before processing:", pendingSwap);
+    console.log("🔍 Message lowercase:", message.toLowerCase());
+    console.log("✅ Has pendingSwap:", !!pendingSwap);
+    console.log("🔢 Confirmation check result:", pendingSwap && (
+      message.toLowerCase().includes("confirm") || 
+      message.toLowerCase() === "yes" || 
+      message.toLowerCase() === "confirm swap" ||
+      message.toLowerCase() === "execute" ||
+      message.toLowerCase() === "proceed"
+    ));
+    
     setLoading(true);
     setVisualAssets([]);
     setSuggestions([]);
+
+    // Handle swap confirmation commands
+    if (pendingSwap && (
+      message.toLowerCase().includes("confirm") || 
+      message.toLowerCase() === "yes" || 
+      message.toLowerCase() === "confirm swap" ||
+      message.toLowerCase() === "execute" ||
+      message.toLowerCase() === "proceed"
+    )) {
+      console.log("🚀 Executing swap:", pendingSwap);
+      
+      // Validate pendingSwap data
+      if (!pendingSwap.from_token || !pendingSwap.to_token || !pendingSwap.amount) {
+        console.error("Invalid swap data:", pendingSwap);
+        const errorMessage = {
+          text: "Invalid swap data. Please try again.",
+          facialExpression: "sad",
+          animation: "Talking_0",
+          audio: null
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setPendingSwap(null);
+        setSuggestions([]);
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        // Get quote and execute the swap with null checks
+        const fromToken = String(pendingSwap.from_token).toUpperCase();
+        const toToken = String(pendingSwap.to_token).toUpperCase();
+        const amount = String(pendingSwap.amount);
+        
+        console.log(`Executing swap: ${amount} ${fromToken} → ${toToken}`);
+        
+        // Get quote first from our backend
+        const quoteResponse = await fetch(`http://127.0.0.1:5001/quote?token_in=${fromToken}&token_out=${toToken}&amount_in=${amount}`);
+        const quoteData = await quoteResponse.json();
+        
+        if (quoteData.error) {
+          throw new Error(`Quote failed: ${quoteData.error}`);
+        }
+        
+        console.log("Quote data:", quoteData);
+        
+        // Execute the swap using the same function as /swap page
+        // executeSwap expects (tokenIn, tokenOut, amountIn, slippage)
+        const result = await executeSwap(fromToken, toToken, amount, 0.01);
+        
+        if (result) {
+          // Success with transaction hash
+          const explorerUrl = `https://suiscan.xyz/testnet/tx/${result}`;
+          
+          // Store transaction for display
+          setRecentTransaction({
+            hash: result,
+            url: explorerUrl,
+            timestamp: Date.now(),
+            amount: pendingSwap.amount,
+            fromToken: pendingSwap.from_token,
+            toToken: pendingSwap.to_token
+          });
+          
+          // Hide transaction after 10 seconds
+          setTimeout(() => {
+            setRecentTransaction(null);
+          }, 10000);
+          
+          const swapMessage = {
+            text: `Swap executed successfully! ${pendingSwap.amount} ${pendingSwap.from_token} → ${pendingSwap.to_token}`,
+            facialExpression: "smile",
+            animation: "Excited",
+            audio: null
+          };
+          
+          const txMessage = {
+            text: `🔗 View transaction: ${explorerUrl}`,
+            facialExpression: "smile",
+            animation: "Talking_1",
+            audio: null,
+            assets: [{
+              type: "link",
+              url: explorerUrl,
+              caption: "View on SuiScan Explorer"
+            }]
+          };
+          
+          setMessages(prev => [...prev, swapMessage, txMessage]);
+          
+          // Refresh balances after successful swap
+          if (refetchBalances) {
+            setTimeout(() => refetchBalances(), 3000);
+          }
+          
+        } else {
+          throw new Error("Swap failed - no transaction hash returned");
+        }
+        setPendingSwap(null);
+        setSuggestions([]);
+        setLoading(false);
+        return;
+        
+      } catch (swapError) {
+        console.error("Swap execution failed:", swapError);
+        
+        const errorMessage = {
+          text: `Swap failed: ${swapError.message}. Please try again.`,
+          facialExpression: "sad",
+          animation: "Talking_0",
+          audio: null
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+        setPendingSwap(null);
+        setSuggestions([]);
+        setLoading(false);
+        return;
+      }
+    }
+    
+    // Handle swap cancellation
+    if (pendingSwap && (message.toLowerCase().includes("cancel") || message.toLowerCase() === "no")) {
+      const cancelMessage = {
+        text: "Swap cancelled. Is there anything else I can help you with?",
+        facialExpression: "default",
+        animation: "Talking_1",
+        audio: null
+      };
+      
+      setMessages(prev => [...prev, cancelMessage]);
+      setPendingSwap(null);
+      setSuggestions([]);
+      setLoading(false);
+      return;
+    }
+    
+    // Handle quote request
+    if (pendingSwap && message.toLowerCase().includes("quote")) {
+      try {
+        const fromToken = String(pendingSwap.from_token).toUpperCase();
+        const toToken = String(pendingSwap.to_token).toUpperCase();
+        const amount = String(pendingSwap.amount);
+        
+        console.log(`Getting quote for: ${amount} ${fromToken} → ${toToken}`);
+        
+        // Get quote from backend
+        const quoteResponse = await fetch(`http://127.0.0.1:5001/quote?token_in=${fromToken}&token_out=${toToken}&amount_in=${amount}`);
+        const quoteData = await quoteResponse.json();
+        
+        if (quoteData.error) {
+          const errorMessage = {
+            text: `Quote failed: ${quoteData.error}`,
+            facialExpression: "sad",
+            animation: "Talking_0",
+            audio: null
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        } else {
+          const quoteMessage = {
+            text: `Quote: ${amount} ${fromToken} → ${quoteData.estimated_out} ${toToken} (Est. slippage: ${quoteData.slippage})`,
+            facialExpression: "thinking",
+            animation: "Thinking",
+            audio: null
+          };
+          setMessages(prev => [...prev, quoteMessage]);
+        }
+        
+        setSuggestions(["Confirm swap", "Cancel swap"]);
+        setLoading(false);
+        return;
+        
+      } catch (error) {
+        console.error("Quote error:", error);
+        const errorMessage = {
+          text: "Failed to get quote. Please try again.",
+          facialExpression: "sad",
+          animation: "Talking_0",
+          audio: null
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setSuggestions(["Confirm swap", "Cancel swap"]);
+        setLoading(false);
+        return;
+      }
+    }
 
     // First, add the user message to the chat history in localStorage
     const userMessage = {
@@ -168,6 +426,117 @@ export const ChatProvider = ({ children }) => {
         // Try to parse the response as JSON
         const resp = JSON.parse(textResponse);
         console.log("Parsed response:", resp);
+        console.log("Response type:", resp.type);
+        console.log("Full response structure:", JSON.stringify(resp, null, 2));
+
+        // Handle swap intents
+        if (resp.type === "swap_intent" && resp.swap_data) {
+          console.log("🎯 === SWAP INTENT DETECTED ===");
+          console.log("🎯 Full response:", resp);
+          console.log("💰 Amount:", resp.swap_data.amount);
+          console.log("📤 From token:", resp.swap_data.from_token);
+          console.log("📥 To token:", resp.swap_data.to_token);
+          console.log("🔄 About to set pendingSwap...");
+          
+          setPendingSwap(resp.swap_data);
+          console.log("✅ PendingSwap state set to:", resp.swap_data);
+          
+          // Show confirmation message with better null checking
+          const amount = resp.swap_data.amount || "unknown";
+          const fromToken = resp.swap_data.from_token || "unknown";
+          const toToken = resp.swap_data.to_token || "unknown";
+          
+          const confirmMessage = `Ready to swap ${amount} ${fromToken} to ${toToken}. Confirm?`;
+          console.log("📝 Confirmation message:", confirmMessage);
+          
+          // Add confirmation message to chat
+          const confirmationMessages = [
+            {
+              text: confirmMessage,
+              facialExpression: "smile",
+              animation: "Talking_1",
+              audio: null
+            }
+          ];
+          
+          setMessages(prev => [...prev, ...confirmationMessages]);
+          
+          // Add suggestions for confirm/cancel
+          setSuggestions([
+            "Confirm swap",
+            "Cancel swap",
+            "Show me the quote first"
+          ]);
+          
+          setLoading(false);
+          return;
+        }
+
+        // Handle take profit / stop loss intents
+        if (resp.type === "tp_sl_intent" && resp.tp_sl_data) {
+          console.log("🎯 TP/SL intent detected:", resp.tp_sl_data);
+          
+          // Get current price from market data or chart component
+          const currentPrice = getCurrentPrice();
+          const percentage = parseFloat(resp.tp_sl_data.percentage) / 100;
+          
+          let targetPrice;
+          if (resp.tp_sl_data.type === "take_profit") {
+            targetPrice = currentPrice * (1 + percentage);
+            setTakeProfitLevel({
+              price: targetPrice,
+              percentage: resp.tp_sl_data.percentage,
+              timestamp: Date.now(),
+              currentPrice: currentPrice
+            });
+          } else {
+            targetPrice = currentPrice * (1 - percentage);
+            setStopLossLevel({
+              price: targetPrice,
+              percentage: resp.tp_sl_data.percentage,
+              timestamp: Date.now(),
+              currentPrice: currentPrice
+            });
+          }
+          
+          // Store in localStorage for persistence
+          if (resp.tp_sl_data.type === "take_profit") {
+            localStorage.setItem('takeProfitLevel', JSON.stringify({
+              price: targetPrice,
+              percentage: resp.tp_sl_data.percentage,
+              timestamp: Date.now(),
+              currentPrice: currentPrice
+            }));
+          } else {
+            localStorage.setItem('stopLossLevel', JSON.stringify({
+              price: targetPrice,
+              percentage: resp.tp_sl_data.percentage,
+              timestamp: Date.now(),
+              currentPrice: currentPrice
+            }));
+          }
+          
+          const confirmMessage = `✅ ${resp.tp_sl_data.type === "take_profit" ? "Take Profit" : "Stop Loss"} set at $${targetPrice.toFixed(4)} (${resp.tp_sl_data.percentage}% ${resp.tp_sl_data.direction} current price of $${currentPrice.toFixed(4)}). You can see it visualized on the trading chart!`;
+          
+          const confirmationMessages = [
+            {
+              text: confirmMessage,
+              facialExpression: "smile",
+              animation: "Talking_1",
+              audio: null
+            }
+          ];
+          
+          setMessages(prev => [...prev, ...confirmationMessages]);
+          setSuggestions([
+            "Show trading chart",
+            "Set stop loss",
+            "Remove levels"
+          ]);
+          
+          setLoading(false);
+          return;
+        }
 
         // Process assets and suggestions
         if (resp.assets && Array.isArray(resp.assets)) {
@@ -471,7 +840,7 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, groqApiKey]);
+  }, [conversationId, groqApiKey, pendingSwap, executeSwap, refetchBalances]);
 
   // Process messages queue
   useEffect(() => {
@@ -558,7 +927,15 @@ export const ChatProvider = ({ children }) => {
         captionWidth,
         setCaptionWidth,
         visualAssets,
-        suggestions
+        suggestions,
+        recentTransaction,
+        takeProfitLevel,
+        stopLossLevel,
+        setTakeProfitLevel,
+        setStopLossLevel,
+        getCurrentPrice,
+        updateCurrentPrice,
+        currentPrice
       }}
     >
       {children}

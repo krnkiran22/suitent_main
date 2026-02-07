@@ -15,6 +15,7 @@ import { useUniswapSwap, UNISWAP_TOKENS } from "@/hooks/useUniswapSwap";
 import UniswapAnalytics from "@/components/swap/UniswapAnalytics";
 import { useUniswapV4Hooks } from "@/hooks/useUniswapV4Hooks";
 import V4HooksSelector from "@/components/swap/V4HooksSelector";
+import { TradingChart } from "@/components/chart/TradingChart";
 
 export default function SwapPage() {
   // Get all tokens
@@ -371,6 +372,14 @@ export default function SwapPage() {
 
         </div>
       </main>
+      
+      {/* Trading Chart with TP/SL Levels */}
+      <div className="max-w-4xl mx-auto px-6 pb-8">
+        <TradingChart 
+          pair={`${tokenOut.symbol}/${tokenIn.symbol}`}
+          currentPrice={quote?.estimatedAmountOut ? parseFloat(quote.estimatedAmountOut) / parseFloat(amountIn || "1") : 0.7970}
+        />
+      </div>
       
       {/* Uniswap Analytics - Background price monitoring */}
       <UniswapAnalytics 
