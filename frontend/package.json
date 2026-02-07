@@ -11,7 +11,8 @@
   "dependencies": {
     "@mysten/dapp-kit": "^1.0.1",
     "@mysten/deepbook-v3": "^1.0.3",
-    "@mysten/sui": "^2.2.0",
+    "@mysten/sui": "^2.3.1",
+    "@mysten/walrus": "^1.0.1",
     "@noble/hashes": "^1.8.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
