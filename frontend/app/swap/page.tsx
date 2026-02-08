@@ -89,6 +89,11 @@ export default function SwapPage() {
     error: quoteError,
   } = useDeepBookQuote(tokenIn.symbol, tokenOut.symbol, amountIn);
 
+  // Calculate current price from quote or use default
+  const currentPrice = quote && amountIn && parseFloat(amountIn) > 0
+    ? parseFloat(quote) / parseFloat(amountIn)
+    : 0.85; // Default price for chart display
+
   // Handle swap direction toggle
   const handleSwapDirection = useCallback(() => {
     const tempToken = tokenIn;

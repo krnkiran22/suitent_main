@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { useChat } from "../sofia/hooks/useChat";
 import { priceService, createPriceMonitor } from "@/services/priceService";
 
 interface TradingChartProps {
@@ -19,24 +18,19 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   mockTakeProfit,
   mockStopLoss
 }) => {
-  const { 
-    takeProfitLevel, 
-    stopLossLevel, 
-    setTakeProfitLevel, 
-    setStopLossLevel, 
-    updateCurrentPrice,
-    currentPrice: contextCurrentPrice
-  } = useChat();
+  // Note: useChat is not used here to avoid ChatProvider dependency
+  // All TP/SL data comes from props
   
-  // Use mock data if provided, otherwise use context data
+  // Use mock data from props
   // Gaming-style default values with entry point
+  const actualCurrentPrice = propCurrentPrice || 0.8523;
   const entryPrice = actualCurrentPrice; // Current price as entry
-  const displayTakeProfit = mockTakeProfit || takeProfitLevel || {
+  const displayTakeProfit = mockTakeProfit || {
     price: 0.9285, // Take profit at 0.9285
     percentage: ((0.9285 - entryPrice) / entryPrice * 100).toFixed(1)
   };
   
-  const displayStopLoss = mockStopLoss || stopLossLevel || {
+  const displayStopLoss = mockStopLoss || {
     price: entryPrice * 0.90, // Default: 10% below entry
     percentage: 10
   };
@@ -54,14 +48,11 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   useEffect(() => {
     console.log("📊 TradingChart - Mock Take Profit:", mockTakeProfit);
     console.log("📊 TradingChart - Mock Stop Loss:", mockStopLoss);
-    console.log("📊 TradingChart - Context Take Profit:", takeProfitLevel);
-    console.log("📊 TradingChart - Context Stop Loss:", stopLossLevel);
     console.log("📊 TradingChart - Display Take Profit:", displayTakeProfit);
     console.log("📊 TradingChart - Display Stop Loss:", displayStopLoss);
-  }, [mockTakeProfit, mockStopLoss, takeProfitLevel, stopLossLevel, displayTakeProfit, displayStopLoss]);
+  }, [mockTakeProfit, mockStopLoss, displayTakeProfit, displayStopLoss]);
   
-  // Use current price from context/props, with fallback to base price
-  const actualCurrentPrice = propCurrentPrice !== 0.8523 ? propCurrentPrice : (contextCurrentPrice || 0.8523);
+  // Use current price from props
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<Array<{price: number, timestamp: number}>>([]);
 
@@ -73,20 +64,12 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       if (historicalData.success) {
         setChartData(historicalData.data);
       }
-      
-      // Get current price and update context
-      const currentPriceData = await priceService.getCurrentPrice(pair);
-      if (currentPriceData.success) {
-        updateCurrentPrice(currentPriceData.price);
-      }
     };
     
     loadInitialData();
     
     // Start real-time price monitoring
     const stopMonitoring = createPriceMonitor((newPrice) => {
-      updateCurrentPrice(newPrice);
-      
       // Add new price point to chart
       setChartData(prev => {
         const newData = [...prev.slice(1), { price: newPrice, timestamp: Date.now() }];
@@ -95,44 +78,38 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     }, 5000); // Update every 5 seconds
     
     return () => stopMonitoring();
-  }, [pair, updateCurrentPrice]);
+  }, [pair]);
 
   // Check if price hits TP/SL levels with notifications
   useEffect(() => {
-    if (takeProfitLevel && actualCurrentPrice >= takeProfitLevel.price) {
+    if (mockTakeProfit && actualCurrentPrice >= mockTakeProfit.price) {
       console.log("🎯 Take Profit hit!");
       
       // Show notification
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
           new Notification(`🎯 Take Profit Hit!`, {
-            body: `Price reached $${actualCurrentPrice.toFixed(4)} (target: $${takeProfitLevel.price.toFixed(4)})`,
+            body: `Price reached $${actualCurrentPrice.toFixed(4)} (target: $${mockTakeProfit.price.toFixed(4)})`,
             icon: '/favicon.ico'
           });
         }
       }
-      
-      setTakeProfitLevel(null);
-      localStorage.removeItem('takeProfitLevel');
     }
     
-    if (stopLossLevel && actualCurrentPrice <= stopLossLevel.price) {
+    if (mockStopLoss && actualCurrentPrice <= mockStopLoss.price) {
       console.log("🛑 Stop Loss hit!");
       
       // Show notification
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
           new Notification(`🛑 Stop Loss Hit!`, {
-            body: `Price dropped to $${actualCurrentPrice.toFixed(4)} (target: $${stopLossLevel.price.toFixed(4)})`,
+            body: `Price dropped to $${actualCurrentPrice.toFixed(4)} (target: $${mockStopLoss.price.toFixed(4)})`,
             icon: '/favicon.ico'
           });
         }
       }
-      
-      setStopLossLevel(null);
-      localStorage.removeItem('stopLossLevel');
     }
-  }, [actualCurrentPrice, takeProfitLevel, stopLossLevel, setTakeProfitLevel, setStopLossLevel]);
+  }, [actualCurrentPrice, mockTakeProfit, mockStopLoss]);
 
   // Request notification permission on component mount
   useEffect(() => {
@@ -502,34 +479,23 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       </div>
       
       {/* TP/SL Summary */}
-      {(takeProfitLevel || stopLossLevel) && (
+      {(mockTakeProfit || mockStopLoss) && (
         <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
           <h4 className="text-sm font-semibold text-white mb-2">Active Orders</h4>
           <div className="space-y-2">
-            {takeProfitLevel && (
+            {mockTakeProfit && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-green-400">Take Profit:</span>
-                <span className="text-white">${takeProfitLevel.price.toFixed(4)} (+{takeProfitLevel.percentage}%)</span>
+                <span className="text-white">${mockTakeProfit.price.toFixed(4)} (+{mockTakeProfit.percentage}%)</span>
               </div>
             )}
-            {stopLossLevel && (
+            {mockStopLoss && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-red-400">Stop Loss:</span>
-                <span className="text-white">${stopLossLevel.price.toFixed(4)} (-{stopLossLevel.percentage}%)</span>
+                <span className="text-white">${mockStopLoss.price.toFixed(4)} (-{mockStopLoss.percentage}%)</span>
               </div>
             )}
           </div>
-          <button
-            onClick={() => {
-              setTakeProfitLevel(null);
-              setStopLossLevel(null);
-              localStorage.removeItem('takeProfitLevel');
-              localStorage.removeItem('stopLossLevel');
-            }}
-            className="mt-3 w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
-          >
-            Clear All Levels
-          </button>
         </div>
       )}
     </div>
